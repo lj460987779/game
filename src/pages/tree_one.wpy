@@ -1,0 +1,173 @@
+<template>
+  <view class="treeone">
+    <view class="headerImg">
+      <image src="../static/images/jiazutag.png"></image>
+    </view>
+    <view class="toPath">
+      <view @tap="enterTree" class="toPath-btn">查看家谱</view>
+      <view @tap="enterPk" class="toPath-btn">亲人猜一猜</view>
+      <!-- <view @tap="enterData" class="toPath-btn">家族数据</view> -->
+    </view>
+    <view class="taglist">
+      <!-- <scroll-view scroll-y='true' style="height: 100%;"> -->
+      <view class="whoTree">
+        <view class="whoTree-name" style="background-image:url(https://ohc5vthqm.qnssl.com/syshu/imgs/jpName.png)">{{treeName}}</view>
+      </view>
+      <block wx:for="{{tagLists}}" wx:key="oneId">
+        <view class="taglist-item" @tap="enterSomeoneTagClick({{item.personId}},{{item.appellation}},{{item.resource.urlFrameCapture}},{{item.seniority}})">
+          <view class="taglist-item-tag">
+            <view class="taglist-item-tag-avatar">
+              <image src="{{item.resource.urlFrameCapture||avatar}}"></image>
+            </view>
+            <view class="taglist-item-tag-name">关于{{item.appellation}}的印象</view>
+          </view>
+          <view class="taglist-item-count">{{item.tagNum}}个</view>
+        </view>
+      </block>
+      <!-- </scroll-view> -->
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' mode="widthFix" @tap="back" class="familyTreeCoverBannerImage"></image>
+    </view>
+    <!-- 提示蒙层 -->
+    <view wx:if="{{treeWarning}}" class="fadeIn Warning">
+      <view class="treeWarning">
+        <view> 你还没有添加足够的亲人印象标签哦~ </view>
+        <view>一个家族树至少要有一个人有三个标签。</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {
+  tag_findMemoirList
+} from '../api/index'
+import broadCast from '../utils/broadcast'
+export default class treeOne extends wepy.page {
+  config = {
+    navigationBarTitleText: '家人印象',
+    enablePullDownRefresh: true,
+    backgroundColor: '#dbf2c4'
+  }
+  data = {
+    token: "",
+    treeId: "",
+    tagNums: "",
+    tagNumber: "",
+    treeName: "",
+    avatar: '../static/images/jiazupk2.png',
+    tagLists: [],
+    treeWarning: false
+  }
+  methods = {
+    back() {
+      // if(this.isShare=="1"){
+
+      // }else{
+
+      // }
+      wx.reLaunch({
+        url: '/pages/index'
+      })
+    },
+    enterTree() {
+      let { token, treeId } = this.data
+      wepy.redirectTo({
+        url: `/pages/tree?treeId=${treeId}&token=${token}&flag=N&isShare=1`
+      })
+    },
+    enterPk() {
+      let { treeId, tagNums, treeName } = this.data
+      if (tagNums.length > 0) {
+        wepy.redirectTo({
+          url: `/pages/pk_intro?treeId=${treeId}&treeName=${treeName}`
+        })
+      } else {
+        this.treeWarning = true
+        this.$apply()
+        setTimeout(() => {
+          this.treeWarning = false
+          this.$apply()
+        }, 3000);
+      }
+    },
+    enterData() {
+      let treeid = this.treeId
+      wepy.redirectTo({
+        url: `/pages/data_detail?treeId=${treeid}`
+      })
+    },
+    enterSomeoneTagClick(personid, call, img, seniority) {
+      wepy.setStorageSync('avatarImg', img)
+      let personInfo = this.tagLists.find(v => v.personId === personid)
+      wepy.setStorageSync('activePerson', personInfo)
+      wepy.navigateTo({
+        url: `/pages/tag_someone?pId=${personid}&callName=${call}&seniority=${seniority}`
+      })
+    }
+  }
+  components = {}
+  async findMemoirList(treeid, token) {
+    if (!token) return
+    try {
+      let res = await tag_findMemoirList(treeid, token)
+      let resdata = res.data.data
+      let tagNumber = resdata.find(v => (v.tagNum > 1))
+      let tagNums = resdata.filter(v => (v.tagNum > 2))
+      this.tagLists = resdata
+      this.tagNums = tagNums
+      this.tagNumber = tagNumber || ''
+      this.$apply();
+      wepy.setStorageSync('familyTagList', resdata);
+    } catch (err) {
+
+    }
+  }
+  onPullDownRefresh() {  // 下拉刷新
+    this.onRefreshTags()
+  }
+  async onRefreshTags() {
+    let { treeId, token } = this.data
+    try {
+      await this.findMemoirList(treeId, token)
+      wepy.hideLoading()
+      wepy.stopPullDownRefresh()
+    } catch (e) {
+      wepy.showModal({
+        title: '提示',
+        content: "网络错误！",
+        success: function(res) {
+        }
+      })
+      wepy.stopPullDownRefresh()
+    }
+  }
+  async onLoad(options) {
+    const userInfo = await this.$parent.getUserInfo()
+    this.token = userInfo.token
+    this.treeId = options.treeId
+    this.treeName = options.treeName
+    this.$apply()
+    this.onRefreshTags()
+    broadCast.on("add_tag_success", () => {
+      this.onRefreshTags()
+    })
+    broadCast.on("updatePerson_success", () => {
+      this.onRefreshTags() 
+    })
+  }
+  // async onShow() {
+  //   if (this.token) {
+  //     this.onRefreshTags()
+  //   } else {
+  //     return
+  //   }
+  // }
+}
+</script>
+
+<style lang="less">
+@import '../css/tree_one.less';
+</style>

@@ -1,0 +1,381 @@
+<style lang="less">
+.customPops {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    z-index: 9;
+    &-box {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+        width: 95%;
+        height: 736rpx;
+        padding-bottom: 36rpx;
+        border-radius: 8rpx;
+        box-shadow: 0 0 5px #363738;
+        background-color: #fff;
+        z-index: 99;
+        box-sizing: border-box;
+        overflow: hidden;
+        &-title {
+            position: relative;
+            width: 100%;
+            height: 94rpx;
+            color: #313131;
+            font-size: 42rpx;
+            line-height: 90rpx;
+            text-align: center;
+            /*border-bottom: 2rpx solid #bfbfbf;*/
+            box-sizing: border-box; // close
+            .closePop {
+                position: absolute;
+                top: 0rpx;
+                right: 0rpx;
+                bottom: 0;
+                margin: auto;
+                display: flex;
+                align-items: center;
+                width: 90rpx;
+                height: 90rpx;
+                >image {
+                    display: block;
+                    width: 24rpx;
+                    height: 24rpx;
+                    margin: 0 auto;
+                    object-fit: cover;
+                }
+            }
+        }
+        &-Int {
+            width: 100%;
+            padding: 52rpx 36rpx 0rpx;
+            margin-bottom: 30rpx;
+            box-sizing: border-box;
+            >input {
+                color: #363738;
+                font-size: 30rpx;
+                height: 58rpx;
+                line-height: 58rpx;
+                padding: 10rpx 40rpx;
+                border-radius: 60rpx;
+                border: 2rpx dashed #bfbfbf;
+            }
+            &-mtip {
+                color: #bfbfbf;
+                font-size: 26rpx;
+                margin-top: 6rpx;
+                margin-left: 40rpx;
+            }
+        }
+        /* .confirm {
+          position: absolute;
+          bottom: 36rpx;
+          left: 0;
+          right: 0;
+          color: #915e49;
+          width: 280rpx;
+          height: 79rpx;
+          margin: auto;
+          line-height: 79rpx;
+          padding: 0 40rpx;
+          font-size: 34rpx;
+          text-align: center;
+          border-radius: 140rpx;
+          background-color: #f7c02f;
+          box-shadow: 0 0 2px #f7c02f;
+        }*/
+    } // 蒙层
+    &-mask {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9;
+        border-radius: 10rpx;
+    }
+}
+
+.items-modal {
+    /*width: 45%;*/
+    margin-bottom: 20rpx;
+    border-radius: 10rpx;
+    position: relative;
+}
+
+.items6-madal {
+    position: relative;
+    height: 244rpx;
+    background-repeat: no-repeat;
+    background-size: 30%;
+    background-position: 100% 100%;
+}
+
+.modal_items6Title {
+    width: 130rpx;
+    position: absolute;
+    right: 20rpx;
+    top: 20rpx;
+    font-size: 38rpx;
+    color: #fff;
+    text-align: left;
+    line-height: 45rpx;
+    text-overflow: -o-ellipsis-lastline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.ff {
+    width: 130rpx;
+    position: absolute;
+    left: 20rpx;
+    top: 20rpx;
+    font-size: 38rpx;
+    color: #fff;
+    text-align: left;
+    line-height: 45rpx;
+    text-overflow: -o-ellipsis-lastline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+button {
+    padding: 0;
+}
+
+.maskss {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    border-radius: 10rpx;
+    position: absolute;
+    top: 0;
+}
+
+.fadeIn {
+    animation: fadeIn 0.2s linear;
+}
+
+.customPops-box-containner {
+    width: 100%;
+    height: 625rpx;
+    overflow: hidden;
+}
+
+.ngb {
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+@-webkit-keyframes fadeIn {
+    0% {
+        opacity: 0
+    }
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0
+    }
+    to {
+        opacity: 1
+    }
+}
+
+.treeWarning {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    color: #fff;
+    font-size: 30rpx;
+    width: 500rpx;
+    padding: 20rpx;
+    border-radius: 20rpx;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.7)
+}
+</style>
+<template>
+    <view class="fadeIn customPops" style="overflow: hidden;">
+        <view class="customPops-box">
+            <view class="customPops-box-title">
+                <!-- {{title}} -->
+                请选择家族树
+                <!-- close -->
+                <view class="closePop" @tap="close">
+                    <image src="../static/images/closeImg.png"></image>
+                </view>
+            </view>
+            <view style="" class="customPops-box-containner">
+                <scroll-view scroll-y class="boxs">
+                    <form report-submit="true" bindsubmit="formSubmit">
+
+                        <view class="familyTreeMains">
+                            <view style="width: {{wWidth-20}}px;height: 100%; ">
+                                <view class="lefts">
+                                    <button wx:for="{{MadalColLefts}}" @tap="entry({{item}})" wx:key="item" wx:for-item="item" style="background-repeat:no-repeat;height:240rpx;background-image:url({{item.bg}});background-color:{{item.bgcolor}};" class="items items6 {{item.class}}">
+                                        <view class="modal_items6Title">{{item.treeName}}</view>
+                                        <view class="maskss" wx:if="{{toPath==='pk'&&!item.canPk}}"></view>
+                                    </button>
+                                </view>
+                                <view class="rights">
+                                    <button wx:for="{{MadalColRights}}" @tap="entry({{item}})" wx:key="item" wx:for-item="item" style="background-repeat:no-repeat;height:240rpx;background-image:url({{item.bg}});background-color:{{item.bgcolor}};" class="items items7 {{item.class}}">
+                                        <view class="modal_items6Title">{{item.treeName}}</view>
+                                        <view class="maskss" wx:if="{{toPath==='pk'&&!item.canPk}}"></view>
+                                    </button>
+                                </view>
+                                <!--   <view style="width: {{wWidth-40}}px;" class="ngb">    
+                                                                    <view wx:for="{{treeList}}" @tap="entry({{item.treeId}},{{item.personId}},{{item.canPk}})" wx:key="item" wx:for-item="item" style="background-repeat:no-repeat;height:240rpx;background-image:url({{item.type===0?'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds1.png':'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds2.png'}});background-color:{{item.type===0?'#44aa78':'#4d9fe3'}};width: {{(wWidth-50)/2}}px;background-position: {{item.type===0?'15% center':'100% 100%'}};" class="items-modal items6-madal ">
+
+                                                                            <view  wx:if="{{item.type==1}}" class="ff">{{item.treeName}}</view>
+                                                                            <view  wx:else class="modal_items6Title">{{item.treeName}}</view>
+                                                                            <view class="mask" wx:if="{{toPath==='pk'&&!item.canPk}}"></view>                                    
+                                                                    </view>
+                                                                </view> -->
+                                <view class="clearfix"></view>
+                            </view>
+                        </view>
+
+                    </form>
+                </scroll-view>
+            </view>
+        </view>
+        <!-- 蒙层 -->
+        <view wx:if="{{treeWarning}}" class="treeWarning" style="z-index:999;font-size:26rpx;display:flex;flex-direction: column;text-align:center;">
+            <text> 你还没有添加足够的亲人印象标签哦~ </text>
+            <text>一个家族树至少要有一个人有三个标签。</text>
+        </view>
+        <view class="customPops-mask"></view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class treeList extends wepy.component {
+    data = {
+        title: "",
+        wHeight: 0,
+        wWidth: 0,
+        treeWarning: false
+    }
+    props = {
+        toPath: {
+            type: String,
+            default: 'null',
+            twoWay: true
+        },
+        needRedirect: {
+            type: Boolean,
+            default: false
+        },
+        MadalColLefts: {
+            type: Array,
+            twoWay: true
+        },
+        MadalColRights: {
+            type: Array,
+            twoWay: true
+        },
+        treeList: {
+            type: Array,
+            twoWay: true
+        }
+    }
+    events = {
+
+    }
+
+    methods = {
+        close() {
+            this.$emit('closeModal')
+        },
+        formattTitle(path) {
+            if (path === "pk") {
+                this.title = "请选择要挑战的树"
+            } else if (path === "data") {
+                this.title = "请选择家族数据的树"
+            } else if (path = "tag") {
+                this.title = '请选择家人印象的树'
+            }
+            this.$apply()
+        },
+        entry(item) {
+            const toPath = this.toPath
+            const { treeId, canPk, personId, flag } = item
+            let treeName = item.treeName
+            if (toPath == "pk" && !canPk) {
+                //                 wepy.showToast({
+                //                     title: `你还没有添加足够的亲人印象标签哦~\n
+                // 一个家族树至少要有一个人有三个标签。`,
+                //                     icon: 'none',
+                //                     duration: 3000
+                //                 })
+
+                this.treeWarning = true
+                setTimeout(() => {
+                    this.treeWarning = false
+                    this.$apply()
+                }, 3000);
+                return
+            }
+            let url = null
+            switch (toPath) {
+                case 'pk':
+                    // url = 'pk_qa'
+                    url = 'pk_intro'
+                    break;
+                case 'data':
+                    url = 'data_detail'
+                    break;
+                case 'tag':
+                    url = 'tree_one'
+                    break;
+                default:
+                    break;
+            }
+            wepy.navigateTo({
+                url: './' + url + "?pid=" + personId + "&treeId=" + treeId + "&flag=" + flag + "&treeName=" + treeName,
+                success: () => {
+                    this.$emit('closeModal')
+                }
+            })
+        }
+    }
+    randomBg(type, flag) {
+        let seed = Math.random();
+        if (type === 1) {
+            return flag === 1 ? 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds2.png' : 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds1.png'
+        } else {
+            return seed > 0.5 ? 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds1.png' : 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds2.png'
+        }
+    }
+    onLoad() {
+        wepy.getSystemInfo({
+            success: (res) => {
+                this.wHeight = res.windowHeight
+                this.wWidth = res.windowWidth
+            }
+        })
+    }
+}
+</script>

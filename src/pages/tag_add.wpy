@@ -1,0 +1,131 @@
+<template>
+  <view class="tagsAdd">
+    <form bindsubmit="formSubmit" class="addform">
+      <view class="addform-default">
+        <view class="addform-default-list">
+          <block wx:for="{{tags}}" wx:key="ids">
+            <view @tap="chooseTag" data-tid="{{item.tid}}" data-value="{{item.title}}" style="{{item.tid==tallyId ? border:''}}" class="tags rubberBand animated">{{item.title}}</view>
+          </block>
+          <!-- 自定义 -->
+          <view class="customTag" @tap="showPopWindow">+ 自定义</view>
+        </view>
+
+      </view>
+      <!-- 提交按钮 -->
+      <view class="saveTags">
+        <button  formType="submit">选好啦</button>
+      </view>
+    </form>
+    <!-- 弹窗 -->
+    <view wx:if="{{flag}}" class="{{flag == true ? 'fadeIn' : ''}} customPop">
+      <view class="customPop-box">
+        <view class="customPop-box-title">说说你对（他/她）的印象吧</view>
+        <view class="customPop-box-Int">
+          <input type="text" value='' @input="bindTagInput" focus="{{focus}}" maxlength='8' placeholder="最多可输入8个字" />
+        </view>
+        <!-- 确定 -->
+        <view class="confirm" @tap="customAdd">确 定</view>
+        <!-- close -->
+        <view class="closePop" @tap="showPopWindow"> X </view>
+      </view>
+      <!-- 蒙层 -->
+      <view class="customPop-mask"></view>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>    
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {
+    auth_encryptedUserData
+  } from '../api/index'
+  export default class tagAdd extends wepy.page {
+    config = {
+      navigationBarTitleText: '添加印象'
+    }
+    data = {
+      userInfo: {},
+      tagId: '',
+      tallyId: '',
+      tags: [],
+      border: '',
+      inputTag: '',
+      focus: false,
+      flag: false,
+      choosed: false
+    }
+    methods = {
+      // 自定义事件
+      async customAdd() {
+        let { tags, inputTag } = this.data;
+        if (inputTag.length > 0) {
+          await tags.push(inputTag);
+          this.flag = false;
+          this.inputTag = '';
+          this.$apply();
+        }
+      },
+      // 监听输入框
+      bindTagInput(e) {
+        let inTag = e.detail.value;
+        this.inputTag = inTag;
+        this.$apply();
+      },
+      // 提交
+      formSubmit(e) {
+        console.log(e)
+      },
+      // 点击选择标签
+      chooseTag(e) {
+        // console.log(e)
+        let text = e.currentTarget.dataset.value,
+          id = e.currentTarget.dataset.tid,
+          textLen = text.length;
+        this.tallyId = id
+        this.border = ''
+        if (textLen == 1 || textLen == 2 || textLen == 3) {
+          this.choosed = true
+          this.border = 'border: 2rpx solid #ea8480; color: #ea8480;'
+        } else if (textLen == 4) {
+          this.choosed = true
+          this.border = 'border: 2rpx solid #f7c02f; color: #f7c02f;'
+        } else if (textLen == 5) {
+          this.choosed = true
+          this.border = 'border: 2rpx solid #76b445; color: #76b445;'
+        } else {
+          this.choosed = true
+          this.border = 'border: 2rpx solid #4d9fe3; color: #4d9fe3;'
+        }
+        this.$apply();
+      },
+      // 弹窗
+      showPopWindow() {
+        let flag = this.flag;
+        this.focus = true; // 输入框自动聚焦
+        if (!flag) {
+          this.flag = true;
+          this.$apply();
+        } else {
+          this.flag = false;
+          this.inputTag = '';
+          this.$apply();
+        }
+        this.$apply();
+      }
+    }
+    components = {}
+    async onLoad(options) {
+      // this.tagId = options.tagid
+      let getTag = await wepy.getStorageSync('tags')
+      this.tags = getTag
+      this.$apply();
+    }
+  }
+</script>
+
+<style lang="less">
+ @import '../css/tag_add.less';
+</style>

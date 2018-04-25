@@ -1,0 +1,852 @@
+
+<template>
+  <view class="familyTreeCover" style="height:{{wHeight}}px;position: fixed;">
+    <scroll-view scroll-y="{{outerScroll}}" class="box" style="height:{{wHeight}}px">
+      <view class="familyTreeCoverBanner">
+        <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image>
+        <view class="ss">
+          <button class="ssone" open-type="share">分享</button>
+          <button class="sstwo" @tap="toSys">关于我们</button>
+        </view>
+        <image src='/static/images/helpful.png' @tap="helpful" mode="widthFix" class="help"></image>
+      </view>
+      <form report-submit="true" bindsubmit="formSubmit">
+        <view class="familyTreeMain">
+          <view class="left">
+            <button class="items items1" @tap="enterModuleClick('create')" form-type="submit">
+              <view class="items1Title">制作家谱</view>
+              <image src='/static/images/wyzs.png' mode="widthFix" class="wyzs"></image>
+              <view class="f">种一颗家族树</view>
+            </button>
+            <button wx:for="{{colLeft}}" @tap="entryTree({{item.treeId}},{{item.flag}})" wx:key="item" wx:for-item="item" style="background-repeat:no-repeat;height:244rpx;background-image:url({{item.bg}});background-color:{{item.bgcolor}};" class="items items6 {{item.class}}">
+              <view class="items6Title">{{item.treeName}}</view>
+              <image src="https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/news1.png" wx:if="{{item.flag=='Y'}}" class="newsFlag"></image>
+            </button>
+            <block wx:if="{{(colLeft.length+colRight.length)%2===0}}">
+              <!-- 奇数偶数显示不同的高度的模板达到底部对齐的效果 -->
+              <button style="" class="items items2" @tap="showPopWindow('data')">
+                <view class="items2Title">家族数据</view>
+                <image src='/static/images/jzsj1.png' mode="widthFix" class="jzsj1"></image>
+                <image src='/static/images/jzsj2.png' mode="widthFix" class="jzsj2"></image>
+              </button>
+            </block>
+            <block wx:else>
+              <button style="" class="items items3" @tap="showPopWindow('data')">
+                <view class="items2Title">家族数据</view>
+                <image src='/static/images/jzsj1.png' mode="widthFix" class="jzsj1"></image>
+                <image src='/static/images/jzsj2.png' mode="widthFix" class="jzsj2"></image>
+              </button>
+            </block>
+
+          </view>
+          <view class="right">
+            <button style="" class="items items4" @tap="showPopWindow('pk')">
+              <view class="items4Title">亲人猜一猜</view>
+              <image src='/static/images/vs.png' mode="widthFix" class="jiazupk"></image>
+              <image src='/static/images/jiazupk1.png' mode="widthFix" class="jzpk1"></image>
+              <image src='/static/images/jiazupk2.png' mode="widthFix" class="jzpk2"></image>
+            </button>
+            <button wx:for="{{colRight}}" @tap="entryTree({{item.treeId}},{{item.flag}})" wx:key="item" wx:for-item="item" style="background-repeat:no-repeat;height:244rpx;background-image:url({{item.bg}});background-color:{{item.bgcolor}};" class="items items7 {{item.class}}">
+              <view class="items6Title">{{item.treeName}}</view>
+              <image src="https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/news1.png" wx:if="{{item.flag=='Y'}}" class="newsFlag"></image>
+            </button>
+            <button class="items items5" @tap="showPopWindow('tag')">
+              <view class="jryxTitle">家人印象</view>
+              <view class="jryximg">
+                <image src='/static/images/jryxbq.png' mode="widthFix" class="jryx1"></image>
+              </view>
+              <image src='/static/images/jryxxc.png' mode="widthFix" class="jryx2 ss"></image>
+              <image src='/static/images/jryxxc.png' mode="widthFix" class="jryx2 dd"></image>
+            </button>
+          </view>
+          <view class="clearfix"></view>
+        </view>
+      </form>
+    </scroll-view>
+    <view wx:if="{{treeWarning}}" class="treeWarning">您还没有家族树，快去种下家族树吧~</view>
+    <!-- 弹窗 -->
+    <Modal wx:if="{{flag}}" :treeList.sync="renderList" :MadalColLefts.sync="MadalColLefts" :MadalColRights.sync="MadalColRights" :toPath.sync="toPath" @closeModal.user="parentCloseModal"></Modal>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import Modal from '../components/modal'
+import { auth_encryptedUserData, auth_findUserInfo, tree_getTreeList, tree_getJoinTreeList, tree_getJoinTreeListNoloading, tree_getTreeListNoloading } from '../api/index'
+const broadcast = require('../utils/broadcast')
+
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '岁月家谱',
+    enablePullDownRefresh: false
+  }
+  data = {
+    flag: false,
+    toPath: null,
+    tree_list: [],
+    userInfo: {},
+    wHeight: 0,
+    wWidth: 0,
+    myTreeList: [],
+    joinedTreeList: [],
+    outerScroll: true,
+    renderList: [],
+    colLeft: [],
+    colRight: [],
+    MadalColLefts: [],
+    MadalColRights: [],
+    MadalColLeftHeights: 0,
+    MadalColRightHeights: 1,
+    colLeftHeight: 300,
+    colRightHeight: 200,
+    treeWarning: false
+  }
+  methods = {
+    helpful() {
+      wepy.navigateTo({
+        url: './help'
+      })
+    },    
+    toSys() {
+      wepy.navigateTo({
+        url: './sys'
+      })
+    },
+    entryTree(id, flag) {
+      wepy.navigateTo({
+        url: './tree?treeId=' + id + "&flag=" + flag
+      })
+    },
+    enterModuleClick(path) {
+      wepy.navigateTo({
+        url: './' + path
+      })
+    },
+    formSubmit(e) {
+      const formId = e.detail.formId
+      let formIds = wepy.getStorageSync('formIds')
+      formIds.push(formId)
+      // wepy.setStorageSync('formIds', [])
+    },
+    parentCloseModal() {
+      this.flag = false;
+      this.outerScroll = true;
+      this.$apply();
+    },
+    // 弹窗
+    async showPopWindow(path) {
+
+      if (this.renderList.length < 1) {
+        // wepy.showToast({
+        //   title: `您还没有家族树，快去种下家族树吧~`,
+        //   icon: 'none',
+        //   duration: 3000
+        // })
+        this.treeWarning = true
+        let t = setTimeout(() => {
+          this.treeWarning = false
+          clearTimeout(t)
+          this.$apply()
+        }, 3000);
+        return
+      }
+      console.log(this.renderList.length, this.flag, this.outerScroll)
+      let flag = this.flag;
+      if (!flag) {
+        if (path == "pk") {
+          try {
+            wx.showLoading({
+              title: '加载中',
+              mask: true
+            })
+            await this.initModal()
+            wx.hideLoading()
+          } catch (e) {
+            wepy.showModal({
+              title: '提示',
+              content: "获取家族树列表失败！",
+              success: function(res) {
+              }
+            })
+          }
+        }
+        this.flag = true;
+        this.outerScroll = false;
+      } else {
+        this.flag = false;
+        this.outerScroll = true;
+        // this.inputTag = '';
+      }
+      this.$invoke('Modal', 'formattTitle', path);
+      this.toPath = path
+      this.$apply();
+      console.log(this.flag)
+    }
+  }
+  components = {
+    Modal
+  }
+  
+  onShareAppMessage(res) {
+    return {
+      title: '大家一起来做家谱吧！',
+      path: `/pages/index`,
+      success: function(res) {
+        // 转发成功
+      },
+      fail: function(res) {
+        // 转发失败
+      }
+    }
+
+  }
+  async onShow() {
+    if (this.userInfo.token) {
+      this.init()
+    }
+  }
+  async onLoad(options) {
+    broadcast.on("person_add_success", () => {
+      // console.log("person_add_success")
+      this.init()
+    })
+    this.userInfo = await this.$parent.getUserInfo()
+    this.init()
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+      }
+    })
+
+
+  }
+  async initModal() {
+    // this.renderList = []
+    this.MadalColLefts = [];
+    this.MadalColRights = [];
+    this.$apply()
+    try {
+      wx.showLoading({
+        title: '加载中',
+        mask: true
+      })
+      await this.getMyTreeList(1)
+      await this.getJoinedTreeList()
+      this.renderModal()
+      wx.hideLoading()
+    } catch (e) {
+
+    }
+  }
+  async init() {
+    // this.renderList = []
+
+    this.$apply()
+    try {
+      await this.getMyTreeList(0)
+      await this.getJoinedTreeList()
+      this.render()
+    } catch (e) {
+      console.log(e.message)
+    }
+  }
+  async getMyTreeList(type) {
+    try {
+      const accessToken = this.userInfo.token
+      let res = await tree_getTreeListNoloading(accessToken)
+      this.myTreeList = res.data.data
+      this.myTreeList.map(item => {
+        item.type = 0
+      })
+      this.renderList = []      //清空renderList
+      if (type == 0) {          //type = 0 时即弹窗和主页面的treeList都需要重新绘制。tpye=1时即弹窗中的treeList重绘
+        // this.colLeft = [];
+        // this.colRight = [];
+      }
+
+      this.MadalColLefts = [];
+      this.MadalColRights = [];
+
+
+      this.renderList = this.myTreeList.concat(this.joinedTreeList)
+      this.$apply()
+    } catch (err) {
+
+    }
+  }
+  async getJoinedTreeList() {
+    try {
+      const accessToken = this.userInfo.token
+      let res = await tree_getJoinTreeListNoloading(accessToken)
+      this.joinedTreeList = res.data.data
+      this.joinedTreeList.map(item => {
+        item.type = 1
+      })
+      this.renderList = this.myTreeList.concat(this.joinedTreeList)
+      this.$apply()
+    } catch (err) {
+    }
+  }
+  randomBg(type, flag) {
+    let seed = Math.random();
+    if (type === 1) {
+      return flag === 1 ? 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds2.png' : 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds1.png'
+
+    } else {
+      // return seed > 0.5 ? 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds1.png' : 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds2.png'
+      return seed > 0.5 ? 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds1.png' : 'https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wds1.png'
+    }
+  }
+  randomBgcolor(type) {
+    let rand = Math.random();
+    if (type === 1) {
+      // return rand > 0.5 ? '#b0bfe8' : '#4e9ee3'
+      return rand > 0.5 ? '#4d9fe3' : '#4d9fe3'
+    } else {
+      // return rand > 0.5 ? '#44aa78' : '#63a953'
+      return rand > 0.5 ? '#44aa78' : '#44aa78'
+    }
+  }
+  handleClass(type, flag) {
+    return type == 1 ? flag == 0 ? 'bgLeft' : 'bgRight' : ''
+  }
+  renderModal() {
+    let renderList = this.renderList,
+      MadalColLeftHeights = this.MadalColLeftHeights,
+      MadalColRightHeights = this.MadalColRightHeights,
+      MadalColLefts = [],
+      MadalColRights = []
+    renderList.forEach(item => {
+      item.bgcolor = this.randomBgcolor(item.type)
+      if (MadalColLeftHeights < MadalColRightHeights) {
+        item.bg = this.randomBg(item.type, 0)
+        item.class = this.handleClass(item.type, 0)
+        MadalColLefts.push(item)
+        MadalColLeftHeights += 200
+      } else {
+        item.bg = this.randomBg(item.type, 1)
+        item.class = this.handleClass(item.type, 1)
+        MadalColRights.push(item)
+        MadalColRightHeights += 200
+      }
+
+    });
+    this.MadalColLefts = MadalColLefts
+    this.MadalColRights = MadalColRights
+    wepy.setStorageSync('treeList', renderList)
+  }
+  render() {
+    let renderList = this.renderList,
+      colLeftHeight = this.colLeftHeight,
+      colRightHeight = this.colRightHeight,
+      MadalColLeftHeights = this.MadalColLeftHeights,
+      MadalColRightHeights = this.MadalColRightHeights,
+      /*
+         colLeft = this.colLeft,
+      colRight = this.colRight,
+      */
+      colLeft = [],
+      colRight = [],
+      MadalColLefts = this.MadalColLefts,
+      MadalColRights = this.MadalColRights;
+    // treeStyle = wepy.getStorageSync("treeStyle")
+    renderList.forEach(item => {
+      // if (!treeStyle[item.treeId]) {
+      //   treeStyle[item.treeId] = {}
+      // }
+      // const itemBgColorFromStorage = treeStyle[item.treeId].bgColor ? treeStyle[item.treeId].bgColor : ""
+      // if (itemBgColorFromStorage) {
+      //   item.bgcolor = itemBgColorFromStorage
+      // } else {
+      //   item.bgcolor = this.randomBgcolor(item.type)
+      //   treeStyle[item.treeId].bgColor = item.bgcolor
+      //   wepy.setStorageSync("treeStyle", treeStyle)
+      // }
+      item.bgcolor = this.randomBgcolor(item.type)
+      if (colLeftHeight < colRightHeight) {
+        item.bg = this.randomBg(item.type, 0)
+        item.class = this.handleClass(item.type, 0)
+        colLeft.push(item)
+        colLeftHeight += 200
+      } else {
+        item.bg = this.randomBg(item.type, 1)
+        item.class = this.handleClass(item.type, 1)
+        colRight.push(item)
+        colRightHeight += 200
+      }
+      if (MadalColLeftHeights < MadalColRightHeights) {
+        item.bg = this.randomBg(item.type, 0)
+        item.class = this.handleClass(item.type, 0)
+        MadalColLefts.push(item)
+        MadalColLeftHeights += 200
+      } else {
+        item.bg = this.randomBg(item.type, 1)
+        item.class = this.handleClass(item.type, 1)
+        MadalColRights.push(item)
+        MadalColRightHeights += 200
+      }
+    });
+    this.colLeft = colLeft
+    this.colRight = colRight
+    this.MadalColLefts = MadalColLefts
+    this.MadalColRights = MadalColRights
+    wepy.setStorageSync('treeList', renderList)
+    this.$apply()
+  }
+
+}
+
+</script>
+<style lang="less">
+/*@import '../css/index.less';*/
+
+.familyTreeCover {
+  width: 100%;
+  height: 100%;
+  background: #dbf2c5;
+}
+
+.familyTreeCoverBanner {
+  width: 100%;
+  height: 320rpx;
+  /*background: red;*/
+  position: relative;
+  .ss {
+    position: absolute;
+    width: 50%;
+    height: 100rpx;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    bottom: 50rpx;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    .ssone {
+      width: 120rpx;
+      height: 60rpx;
+      line-height: 60rpx;
+      background: #59a1cf;
+      border: 2rpx solid #fff;
+      font-size: 28rpx;
+      color: #fff;
+    }
+    .sstwo {
+      width: 140rpx;
+      height: 60rpx;
+      line-height: 60rpx;
+      background: #59a1cf;
+      border: 2rpx solid #fff;
+      font-size: 28rpx;
+      color: #fff;
+    }
+  }
+  .help{
+    width: 70rpx;
+    position: absolute;
+    right: 12rpx;
+    top: 10rpx;
+  }
+}
+
+.familyTreeCoverBannerImage {
+  width: 100%;
+  height: 240rpx;
+}
+
+.familyTreeMain {
+  width: 100%;
+  background: #dbf2c5;
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  line-height: 0;
+  content: "";
+  clear: both;
+}
+
+.box {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.left {
+  width: 46%;
+  float: left;
+  padding-left: 20rpx;
+}
+
+.right {
+  width: 46%;
+  float: right;
+  padding-right: 20rpx;
+}
+
+.items {
+  width: 100%;
+  margin-bottom: 20rpx;
+  border-radius: 10rpx;
+  position: relative;
+}
+
+.newsFlag {
+  position: absolute;
+  top: 5rpx;
+  left: 10rpx;
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.items1 {
+  height: 374rpx;
+  background: #bacc3e;
+  position: relative;
+  .items1Title {
+    width: 60%;
+    color: #fff;
+    position: absolute;
+    left: 30rpx;
+    text-align: left;
+    font-size: 50rpx;
+  }
+  .f {
+    width: 60%;
+    display: block;
+    font-size: 32rpx;
+    color: #fff;
+    position: absolute;
+    right: 20rpx;
+    bottom: 0rpx;
+  }
+}
+
+
+
+.wyzs {
+  width: 240rpx;
+  position: absolute;
+  right: 20rpx;
+  bottom: 80rpx;
+}
+
+.items2 {
+  height: 300rpx;
+  background: #52699d;
+  position: relative;
+  /*padding-top: 20rpx;*/
+}
+
+.items2Title {
+  position: absolute;
+  right: 20rpx;
+  top: 20rpx;
+  font-size: 45rpx;
+  color: #fff;
+}
+
+.jzsj1 {
+  width: 180rpx;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+}
+
+.jzsj2 {
+  width: 160rpx;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.items3 {
+  height: 565rpx;
+  background: #52699d;
+  position: relative;
+  padding-top: 20rpx;
+  margin-bottom: 0rpx;
+}
+
+.items4 {
+  height: 300rpx;
+  background: #ea8488;
+  position: relative;
+}
+
+.items4Title {
+  width: 280rpx;
+  height: 60rpx;
+  text-align: center;
+  /*position: absolute;
+    right: 0;
+    left: 0;
+    top: 20rpx;*/
+  margin: 0 auto;
+  font-size: 45rpx;
+  color: #fff;
+}
+
+.jiazupk {
+  width: 150rpx;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40rpx;
+  margin: 0 auto;
+}
+
+.jzpk1,
+.jzpk2 {
+  position: absolute;
+  bottom: 0;
+}
+
+.jzpk1 {
+  width: 100rpx;
+  right: 0;
+  border-bottom-right-radius: 10rpx;
+}
+
+.jzpk2 {
+  width: 90rpx;
+  left: 0;
+  border-bottom-left-radius: 10rpx;
+}
+
+.items5 {
+  height: 374rpx;
+  background: #f7c02f;
+  position: relative;
+}
+
+.jryxTitle {
+  width: 200rpx;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20rpx;
+  margin: 0 auto;
+  font-size: 45rpx;
+  color: #fff;
+}
+
+.jryx1 {
+  width: 100%;
+}
+
+.jryx2 {
+  width: 60rpx;
+}
+
+.ss {
+  position: absolute;
+  left: 10rpx;
+  bottom: 0;
+}
+
+.dd {
+  position: absolute;
+  right: 10rpx;
+  bottom: 0;
+}
+
+.items6,
+.items7 {
+  position: relative;
+  height: 244rpx;
+  background-repeat: no-repeat;
+  background-size: 23%;
+  background-position: 12% center;
+}
+
+.items6Title {
+  width: 180rpx;
+  position: absolute;
+  right: 20rpx;
+  top: 20rpx;
+  font-size: 45rpx;
+  color: #fff;
+  text-align: left;
+  line-height: 55rpx;
+  /*white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;*/
+  text-overflow: -o-ellipsis-lastline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bgLeft {
+  background-size: 160rpx;
+  background-position: 0 100%;
+}
+
+.bgRight {
+  background-size: 160rpx;
+  background-position: 100% 100%;
+}
+
+.familyTreeMains {
+  width: 100%;
+  background: #fff;
+  padding-top: 20rpx;
+  /*padding-bottom: 20rpx;*/
+}
+
+.boxs {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #fff;
+}
+
+.lefts {
+  width: 46%;
+  float: left;
+  padding-left: 20rpx;
+}
+
+.rights {
+  width: 46%;
+  float: right;
+  padding-right: 20rpx;
+} // 弹窗
+.customPop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  z-index: 9;
+  &-box {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    width: 86%;
+    height: 636rpx;
+    padding-bottom: 36rpx;
+    border-radius: 8rpx;
+    box-shadow: 0 0 5px #363738;
+    background-color: #fff;
+    z-index: 99;
+    box-sizing: border-box;
+    overflow: hidden;
+    &-title {
+      position: relative;
+      width: 100%;
+      height: 70rpx;
+      color: #363738;
+      font-size: 34rpx;
+      line-height: 70rpx;
+      text-align: center;
+      border-bottom: 2rpx solid #bfbfbf;
+      box-sizing: border-box; // close
+      .closePop {
+        position: absolute;
+        top: 0rpx;
+        right: 0rpx;
+        bottom: 0;
+        margin: auto;
+        display: flex;
+        align-items: center;
+        width: 60rpx;
+        height: 60rpx;
+        >image {
+          display: block;
+          width: 24rpx;
+          height: 24rpx;
+          margin: 0 auto;
+          object-fit: cover;
+        }
+      }
+    }
+    &-Int {
+      width: 100%;
+      padding: 52rpx 36rpx 0rpx;
+      margin-bottom: 30rpx;
+      box-sizing: border-box;
+      >input {
+        color: #363738;
+        font-size: 30rpx;
+        height: 58rpx;
+        line-height: 58rpx;
+        padding: 10rpx 40rpx;
+        border-radius: 60rpx;
+        border: 2rpx dashed #bfbfbf;
+      }
+      &-mtip {
+        color: #bfbfbf;
+        font-size: 26rpx;
+        margin-top: 6rpx;
+        margin-left: 40rpx;
+      }
+    }
+    /* .confirm {
+          position: absolute;
+          bottom: 36rpx;
+          left: 0;
+          right: 0;
+          color: #915e49;
+          width: 280rpx;
+          height: 79rpx;
+          margin: auto;
+          line-height: 79rpx;
+          padding: 0 40rpx;
+          font-size: 34rpx;
+          text-align: center;
+          border-radius: 140rpx;
+          background-color: #f7c02f;
+          box-shadow: 0 0 2px #f7c02f;
+        }*/
+  } // 蒙层
+  &-mask {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+  }
+}
+
+.back_btn {
+  width: 180rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 40rpx;
+  right: 10rpx;
+  &>image {
+    width: 100%;
+  }
+}
+
+.treeWarning {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  color: #fff;
+  font-size: 30rpx;
+  width: 500rpx;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7)
+}
+</style>

@@ -1,0 +1,30 @@
+<style lang="less">
+
+</style>
+<template>
+  <view class="container">
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+
+import { auth_encryptedUserData, auth_findUserInfo, tree_getTreeList } from '../api/index'
+
+export default class tree_participation extends wepy.page {
+  config = {
+    navigationBarTitleText: 'tree_participation'
+  }
+  data = {
+
+  }
+  methods = {
+  }
+  components = {
+  }
+  async onLoad(options) {
+
+  }
+}
+</script>

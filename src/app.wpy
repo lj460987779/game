@@ -1,0 +1,162 @@
+<style lang="less">
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+</style>
+
+<script>
+import wepy from 'wepy'
+import 'wepy-async-function'
+import { auth_encryptedUserData, auth_findUserInfo } from './api/index'
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/index',
+      'pages/create',
+      'pages/data',
+      'pages/data_detail',
+      'pages/tag',
+      'pages/tag_someone',
+      'pages/pk',
+      'pages/pk_qa',
+      'pages/pk_grade',
+      'pages/tree',
+      'pages/tree_one',
+      'pages/tree_share',
+      'pages/sys',
+      // 'pages/t',
+      'pages/pk_intro',
+      'pages/help'
+    ],
+    window: {
+      backgroundTextStyle: 'light',
+      navigationBarBackgroundColor: '#fff',
+      navigationBarTitleText: 'WeChat',
+      navigationBarTextStyle: 'black'
+    }
+  }
+
+  globalData = {
+    userInfo: null,
+    formIds: [],
+    updateTime: null
+  }
+
+  constructor() {
+    super()
+  }
+
+  onLaunch() {
+    let formIds = wepy.getStorageSync('formIds')
+    if (!formIds) {
+      wepy.setStorageSync('formIds', [])
+    }
+  }
+
+  login() {
+    return new Promise((resolve, reject) => {
+      wepy.login({
+        success: res => {
+          const code = res.code
+          wepy.getUserInfo({
+            success: async (res) => {
+              const encryptedData = res.encryptedData
+              const iv = res.iv
+              try {
+                let res = await auth_encryptedUserData({
+                  encryptedData: encryptedData, iv: iv, codeFromWeixin: code,
+                  clientType: 8
+                });
+                const userInfo = res.data.data
+                if (!userInfo) {
+                  wepy.showModal({
+                    title: '提示',
+                    content: "登录失败",
+                    success: function(res) {
+
+                    }
+                  })
+                }
+                wepy.setStorageSync('userInfo', userInfo)
+                this.globalData.userInfo = userInfo
+                resolve(userInfo)
+              } catch (errRes) {
+                console.log(errRes)
+                reject()
+              }
+            }
+          })
+        }
+      })
+    })
+
+  }
+
+  getUserInfo() {
+    return new Promise((resolve, reject) => {
+      const that = this
+      const now = new Date()
+      if (this.globalData.userInfo) {
+        if (this.globalData.updateTime) {
+          if (now - this.globalData.updateTime < 10800000 ) {
+            resolve(this.globalData.userInfo)
+            return
+          }
+        }
+      }
+      wepy.checkSession({
+        success: async () => {
+          //session 未过期，并且在本生命周期一直有效
+          var userInfo;
+          try {
+            // let userInfo = wepy.getStorageSync('userInfo')
+            userInfo = this.globalData.userInfo || wepy.getStorageSync("userInfo")
+            let res = await auth_findUserInfo(userInfo.token)
+            if (res.data.success && res.data.data.token) {
+              userInfo = res.data.data
+            } else {
+              try {
+                userInfo = await this.login()
+              } catch (e) {
+                reject()
+              }
+            }
+          } catch (err) {
+            console.log(err)
+            try {
+              userInfo = await this.login()
+            } catch (e) {
+              reject()
+            }
+          }
+          this.globalData.userInfo = userInfo
+          this.globalData.updateTime = new Date()
+          resolve(userInfo)
+        },
+        fail: () => {
+          //登录态过期
+          wepy.authorize({
+            scope: 'scope.userInfo',
+            success: async () => {
+              try {
+                const userInfo = await this.login()
+                this.globalData.userInfo = userInfo
+                this.globalData.updateTime = new Date()
+                resolve(userInfo)
+              } catch (e) {
+                reject()
+              }
+            }
+          })
+        }
+      })
+    })
+  }
+}
+</script>

@@ -1,0 +1,33 @@
+
+<template>
+    <view class="info">
+
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import { tree_shareTree, tag_findMemoirList } from '../api/index'
+
+export default class pk extends wepy.page {
+    components = {
+        
+    }
+    config = {
+        navigationBarTitleText: 'pk'
+    }
+    data = {
+
+    }
+    methods = {
+
+    }
+
+    async onLoad(options) {
+
+    }
+}
+</script>
+<style lang="less">
+@import '../css/pk.less';
+</style>

@@ -1,0 +1,164 @@
+<template>
+  <view class="persondetail">
+    <form bindsubmit="formSubmit">
+      <view class="detail-form">
+        <view>
+          <view class="tip">完善家人信息</view>
+        </view>
+        <view class="formlist nickItem">
+          <label class="listleft star">姓名/昵称：</label>
+          <input class="nickInput" bindinput="bindAppelInput" type="text" cursor-spacing="240" maxlength="8" value="{{appelInput||''}}" placeholder="小名、昵称" />
+        </view>
+        <view class="formlist" style="padding: 10rpx 40rpx;">
+          <label class="listleft star">性别：</label>
+          <radio-group class="radio-group" bindchange="genderRadio">
+            <label class="radio" wx:for="{{gender}}" wx:key="item">
+              <radio  value="{{item.name}}" checked="{{item.checked}}"/>{{item.value}}
+            </label>
+          </radio-group>
+        </view>
+        <view class="formlist">
+          <label class="listleft null">属相：</label>
+          <picker class="allpick" range="{{zodiacs}}" value="{{zodiac}}" bindchange="zodiacPickerSelected"> 
+            <view wx:if="{{zodiacs[zodiac]}}">{{zodiacs[zodiac]}}</view>
+            <view wx:else>请选择属相</view>
+          </picker>
+          <view class="triangle"></view>
+        </view>
+        <view class="formlist">
+          <label class="listleft null">星座：</label>
+          <picker class="allpick" range="{{constell}}" value="{{consIndex}}" bindchange="constPickerSelected">         
+            <view wx:if="{{constell[consIndex]}}" class="">{{constell[consIndex]}}</view>
+            <view wx:else>请选择星座</view>
+          </picker>
+          <view class="triangle"></view>
+        </view>
+        <view class="formlist">
+          <label class="listleft null">血型：</label>
+          <picker class="allpick" range="{{bloodType}}" value="{{bloodIndex}}" bindchange="bloodPickerSelected">
+            <view wx:if="{{bloodType[bloodIndex]}}">{{bloodType[bloodIndex]}}</view>
+            <view wx:else>请选择血型</view>
+          </picker>
+          <view class="triangle"></view>
+        </view>
+        <!-- 保存信息 -->
+        <view class="saveMessage">
+          <button type='primary' formType='submit'>保存</button>
+        </view>
+      </view>
+    </form>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import {
+  tag_updatePersonInfo
+} from '../api/index'
+import broadCast from '../utils/broadcast'
+export default class treeMemberTag extends wepy.page {
+  config = {
+    navigationBarTitleText: '人物详情'
+  }
+  props = {
+    twoActivePerson: {
+      type: Object,
+      default: 'null',
+      twoWay: true
+    }
+  }
+  data = {
+    oneId: '',
+    userToken: '',
+    appelInput: '',
+    genderIndex: '',
+    zodiac: '',
+    consIndex: '',
+    bloodIndex: '',
+    gender: [
+      { name: '男', value: '男' },
+      { name: '女', value: '女' }
+    ],
+    zodiacs: ['子鼠', '丑牛', '寅虎', '卯兔', '辰龙', '已蛇', '午马', '未羊', '申猴', '酉鸡', '戌狗', '亥猪'],
+    bloodType: ['A', 'B', 'AB', 'O', '其他'],
+    constell: ['白羊座(03.21~04.19)','金牛座(04.20~05.20)','双子座(05.21~06.21)','巨蟹座(06.22~07.22)','狮子座(07.23~08.22)','处女座(08.23~09.22)','天秤座(09.23~10.23)','天蝎座(10.24~11.22) ','射手座(11.23~12.21)','魔羯座(12.22~01.19)','水瓶座(01.20~02.18)','双鱼座(02.19~03.20)']
+  }
+  methods = {
+    bindAppelInput(e) { // 称呼
+      this.appelInput = e.detail.value;
+      this.$apply()
+    },
+    genderRadio(e) { // 性别
+      let gender = e.detail.value;
+      this.genderIndex = (gender === '男') ? '1' : '2'
+      this.$apply()
+    },
+    zodiacPickerSelected(e) { // 属相
+      this.zodiac = e.detail.value;
+      this.$apply()
+    },
+    constPickerSelected(e) { // 星座
+      this.consIndex = e.detail.value;
+      this.$apply()
+    },
+    bloodPickerSelected(e) { // 血型
+      this.bloodIndex = e.detail.value;
+      this.$apply()
+    },
+    // 提交个人资料
+    async formSubmit(e) {
+      const that = this
+      let { oneId, userToken, appelInput, genderIndex, consIndex, zodiac, bloodIndex } = this.data
+      let zodiacValue = zodiac !=="" ? Number(zodiac) + 1 + "" : zodiac
+      let constellValue = consIndex !=="" ? Number(consIndex) + 1 + "" : consIndex
+      let bloodValue = bloodIndex !=="" ? Number(bloodIndex) + 1 + "" : bloodIndex
+      // console.log("zodiac:", zodiac, "zodiacValue:", zodiacValue)
+      if (appelInput !== "") {
+        await that.updatePersonInfo(oneId, appelInput, genderIndex, zodiacValue, constellValue, bloodValue, userToken)
+        wepy.hideLoading()
+        this.$emit('fireAppellation', appelInput)
+      } else {
+        this.$emit('appellationNull')
+      }
+    }
+  }
+  components = {}
+  async updatePersonInfo(id, appvalue, sex, zovalue, convalue, bloodvalue, token) {
+    if (!token) return
+    let res = await tag_updatePersonInfo(id, appvalue, sex, zovalue, convalue, bloodvalue, token)
+    broadCast.fire("updatePerson_success")
+  }
+  async onLoad() {
+    const userinfo = await this.$parent.$parent.getUserInfo()
+    this.userToken = userinfo.token
+    this.oneId = this.activePerson.personId
+    let {gender} = this.data
+    if (this.activePerson.gender) {
+      this.genderIndex = Number(this.activePerson.gender)
+      let newGender = gender.map((v, i)=> {
+        if (i == this.genderIndex-1) {
+          v.checked = true
+        }
+        return v
+      })
+      this.gender = newGender
+      this.$apply()
+    }
+    if (this.activePerson.appellation) {
+      this.appelInput = this.activePerson.appellation
+    }
+    if (this.activePerson.zodiac) {
+      this.zodiac = Number(this.activePerson.zodiac) - 1
+    }
+    if (this.activePerson.bloodType) {
+      this.bloodIndex = Number(this.activePerson.bloodType) - 1
+    }
+    if (this.activePerson.constellatory) {
+      this.consIndex = Number(this.activePerson.constellatory) - 1
+    }
+    this.$apply();
+  }
+}
+</script>
+<style lang="less">
+@import '../css/tag_oneInfo.less';
+</style>

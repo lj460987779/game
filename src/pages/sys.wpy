@@ -1,0 +1,27 @@
+<style lang="less">
+}
+</style>
+<template>
+    <web-view src="{{src}}">
+    </web-view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class sys extends wepy.page {
+    config = {
+        navigationBarTitleText: '关于我们'
+    }
+    data = {
+        src: "https://www.sysshu.com?f=xcx"
+    }
+    methods = {
+    }
+    components = {
+    }
+    onLoad(options) {
+
+    }
+}
+</script>

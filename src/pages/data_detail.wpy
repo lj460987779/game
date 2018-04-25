@@ -1,0 +1,1183 @@
+<template>
+  <view class="dataDetailBox">
+    <view class="dataDetailBanner">
+      <image src='/static/images/jiazudata.png' mode="widthFix" class="dataDetaiImage"></image>
+      <view class="data_btn" style="">
+        <button @tap="entry('tree')">查看家谱</button>
+        <!-- <button @tap="entry('pk')">亲人猜一猜</button> -->
+        <button @tap="entry('tag')">家人印象</button>
+        <button open-type="share">分享</button>
+      </view>
+    </view>
+    <view class="b" wx:if="{{!isNone}}">
+      <view class="dataDetailContainer">
+        <view class="lvsidai">
+          {{treeName}}
+        </view>
+        <view class="huang">
+          <view class="huangTitle">家族评级</view>      
+          <view class="huangsidai">{{treeLevel.title}}</view>
+        </view>
+        <view class="dataperson-title">家族树中总人数
+          <text style="color:#44AA78">{{AllPERSONNUMBER||''}}</text>人</view>
+        <view wx:if="{{specialTagRankings.length>0}}">
+          <!--有三个数据的布局-->
+          <view class="dataPerson dataHasThree" wx:if="{{specialTagRankings.length==3}}">
+
+            <view class="dataPersonAll dataone">
+
+              <view class="dataPersonAllOne">
+                <image src='{{specialTagRankings[0].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages"></image>
+              </view>
+              <view style="" class="pt1">
+                {{specialTagRankings[0].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[0].appellation}}</view>
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+            <view class="dataPersonAll datatwo">
+              <view class="dataPersonAllOne" style="">
+                <image src='{{specialTagRankings[1].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages" style=""></image>
+              </view>
+              <view class="pt1">
+                {{specialTagRankings[1].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[1].appellation}}</view>
+
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+            <view class="dataPersonAll datathree">
+              <view class="dataPersonAllOne" style="">
+                <image src='{{specialTagRankings[2].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages" style=""></image>
+              </view>
+              <view style="" class="pt1">
+                {{specialTagRankings[2].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[2].appellation}}</view>
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+          </view>
+          <!-- 有两个数据的布局 -->
+
+          <view class="dataPerson dataHasTwo" wx:if="{{specialTagRankings.length==2}}">
+
+            <view class="dataPersonAll-2 left">
+
+              <view class="dataPersonAllOne">
+                <image src='{{specialTagRankings[0].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages"></image>
+              </view>
+              <view style="" class="pt1">
+                {{specialTagRankings[0].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[0].appellation}}</view>
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+            <view class="dataPersonAll-2 right">
+              <view class="dataPersonAllOne" style="">
+                <image src='{{specialTagRankings[1].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages" style=""></image>
+              </view>
+              <view class="pt1">
+                {{specialTagRankings[1].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[1].appellation}}</view>
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+          </view>
+          <!-- 有一个数据的布局 -->
+
+          <view class="dataPerson dataHasOne" wx:if="{{specialTagRankings.length==1}}">
+            <view class="dataPersonAll dataone">
+
+              <view class="dataPersonAllOne">
+                <image src='{{specialTagRankings[0].resourceInfo.urlToken}}' mode="widthFix" class="dataDetaiImages"></image>
+              </view>
+              <view style="" class="pt1">
+                {{specialTagRankings[0].tag}}
+                <!-- 支援国家建设-->
+              </view>
+              <view class="pt2">{{specialTagRankings[0].appellation}}</view>
+              <!-- <image src='/static/images/banner.png' mode="widthFix" class="familyTreeCoverBannerImage"></image> -->
+            </view>
+          </view>
+        </view>
+
+        <view class="dataRanking" wx:if="{{tags.length>0}}" wx:for-index="index">
+          <view class="apply">最赞标签：</view>
+          <view style="" class="listRank listRankone" wx:for="{{tags}}" wx:for-item="item" wx:key="item">
+            <view style="" class="listRankLeft">
+              <image src="{{rankImage[index]}}" mode="widthFix" style="width: 55rpx;margin-left: 10rpx;"></image>
+              <view style="" class="datavator">
+                <view class="ll">
+                  <image src='{{item.resourceInfo.urlToken}}' mode="scaleToFill" style=""></image>
+                </view>
+
+              </view>
+              <text style="">{{item.appellation}}</text>
+            </view>
+            <view style="" class="listRankRight">
+              <text style="color: {{item.color}};border:1px solid {{item.color}};">{{item.tag}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="starRank" wx:if="{{constellation.length>0}}">
+          <view class="starRanktitle">
+            <text>星座排行</text>
+          </view>
+          <canvas canvas-id="ringCanvas2" class="canvas"></canvas>
+          <view class="starRankDetail">
+            <view class="starRankDetailA" wx:for="{{constellationList}}" wx:for-item="item" wx:key="item">
+              <view style="background: {{item.bg}};"></view>
+              <label>{{item.name}}</label>
+              <text>({{item.personNumber}}人)</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="starRank" wx:if="{{zodiac.length>0}}">
+          <view class="starRanktitle">
+            <text>属相排行</text>
+          </view>
+          <canvas canvas-id="ringCanvas1" class="canvas"></canvas>
+          <view class="starRankDetail">
+            <view class="starRankDetailA" wx:for="{{zodiacList}}" wx:for-item="item" wx:key="item">
+              <view style="background: {{item.bg}};"></view>
+              <label>{{item.name}}</label>
+              <text>({{item.personNumber}}人)</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="starRank" wx:if="{{blood.length>0}}">
+          <view class="starRanktitle">
+            <text>血型排行</text>
+          </view>
+          <canvas canvas-id="ringCanvas3" class="canvas"></canvas>
+          <view class="starRankDetail">
+            <view class="starRankDetailA" wx:for="{{bloodList}}" wx:for-item="item" wx:key="item">
+              <view style="background: {{item.bg}};"></view>
+              <label>{{item.name}}</label>
+              <text>({{item.personNumber}}人)</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="starRank" wx:if="{{gender.length>0}}">
+          <view class="starRanktitle">
+            <text>性别比例</text>
+          </view>
+          <canvas canvas-id="ringCanvas4" class="canvas"></canvas>
+          <view class="starRankDetail">
+            <view class="starRankDetailA" wx:for="{{gender}}" wx:for-item="item" wx:key="item">
+              <view style="background: {{item.bg}};"></view>
+              <label>{{item.name}}</label>
+              <text>({{item.personSum}}人)</text>
+            </view>
+          </view>
+        </view>
+        <view class="ccd">
+          快去给家人添加更多信息吧
+        </view>
+      </view>
+    </view>
+    <view class="dataAdd" wx:else>
+      <view class="dataDetailContainer" style="height:{{wHeight-170}}px">
+        <image src='/static/images/wds1.png' mode="widthFix" class="dataAddImage"></image>
+        <view class="p1">家族树中总人数
+          <text>{{AllPERSONNUMBER}}</text>人</view>
+        <view class="p2">当前家族树中亲人没有相关数据</view>
+        <view class="p2">快去邀请亲人补充信息吧。</view>
+      </view>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' @tap="back" mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {
+  tree_getDataCount, tree_joinTreeUpdate, tree_shareTree
+} from '../api/index'
+import {
+  shuffle,
+  createTreeTitle
+} from '../utils/index'
+
+var wxCharts = require('../utils/wxcharts-min.js');
+
+export default class dataDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '家族数据'
+  }
+  data = {
+    userInfo: {},
+    treeInfo: null,
+    treeLevel:null,
+    wHeight: 0,
+    isShare: null,
+    treeName: null,
+    tags: null,
+    gender: null,
+    zodiac: null,
+    constellation: null,
+    specialTagRankings: null,
+    blood: null,
+    AllPERSONNUMBER: null,
+    zodiacList: null,
+    constellationList: null,
+    bloodList: null,
+    isNone: false,
+    colorList: ["#FBD64C", "#75B540", "#"],
+    rankImage: ["/static/images/numberone.png", "/static/images/numbertwo.png", "/static/images/numberthree.png", "/static/images/4.png", "/static/images/5.png"]
+  }
+  methods = {
+    back() {
+      // let currentPage = getCurrentPages()
+      // if (currentPage.length == 1) {
+      //   wepy.redirectTo({
+      //     url: `/pages/index`,
+      //   })
+      // } else {
+      //   wepy.navigateBack({
+      //     delta: 1
+      //   })
+      // }
+      wx.reLaunch({
+        url: '/pages/index'
+      })
+
+    },
+    entry(path) {
+      if (path == "tree") {
+        if (this.isShare == "1") {
+          wepy.redirectTo({
+            url: `/pages/tree?treeId=${this.treeId}&isShare=1`
+          })
+        } else {
+          wepy.redirectTo({
+            url: `/pages/tree?treeId=${this.treeId}&isShare=1&flag=N`
+          })
+        }
+      } else if (path == "pk") {
+        wepy.redirectTo({
+          url: `/pages/pk_qa?treeId=${this.treeId}&flag=N`,
+        })
+      } else {
+        //tag
+        wepy.redirectTo({
+          url: `/pages/tree_one?treeId=${this.treeId}&treeName=${this.treeName}&isShare=1`,
+        })
+      }
+
+    }
+  }
+  onShareAppMessage(res) {
+    return {
+      title: '家谱做好了,快来看看吧！',
+      path: "/pages/data_detail?treeId=" + this.treeId + "&treeName=" + this.treeName + "&isShare=1",
+      success: function(res) {
+        // 转发成功
+      },
+      fail: function(res) {
+        // 转发失败
+      }
+    }
+  }
+  components = {}
+  randomBg() {
+    return ["#f7c02f", "#4d9fe3", "#ea8480", "#76b445"][Math.floor(Math.random() * 4)]  //黄蓝红绿
+  }
+  async onLoad(options) {
+    this.isShare = options.isShare
+    this.treeId = options.treeId
+    this.treeName = decodeURIComponent(options.treeName)
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+      }
+    })
+    wx.showLoading({
+      title: '加载中',
+      mask: true
+    })
+    try {
+      const userInfo = await this.$parent.getUserInfo()
+      this.token = userInfo.token
+      if (this.isShare === "1") {
+        // await tree_shareTree({ treeId: this.treeId }, this.userInfo.token)
+        await tree_joinTreeUpdate({
+          treeId: this.treeId
+        }, this.token)
+      }
+    } catch (e) {
+      wepy.showToast({
+        title: `出错啦`,
+        icon: 'loading',
+        duration: 3000
+      })
+      return
+    }
+
+
+    try {
+      var res = await tree_getDataCount({ treeId: this.treeId }, this.token)
+    } catch (e) {
+      wepy.showToast({
+        title: `获取家族数据失败,请重试。`,
+        icon: 'loading',
+        duration: 3000
+      })
+      return
+    }
+    console.log(this.isShare)
+
+    const data = res.data.data
+    this.AllPERSONNUMBER = data.allSum
+    if (!data.womanSum && !data.manSum && data.chinaZodiacCounts.length == 0 && data.constellatoryCounts.length == 0 && data.bloodTypeCounts.length == 0 && data.specialTagRankings.length == 0 && data.tagRankings.length == 0) {
+      this.isNone = true
+      this.$apply()
+      return
+    }
+
+    this.zodiac = data.chinaZodiacCounts.sort(sort).slice(0, 3)
+    this.constellation = data.constellatoryCounts.sort(sort).slice(0, 3)
+    this.blood = data.bloodTypeCounts.sort(sort).slice(0, 5)
+    this.tags = data.tagRankings.filter(v => v.likeNum > 2 || v.likeNum == 2).sort(sortByNum).slice(0, 5)
+    this.gender = [{
+      personSum: data.manSum,
+      color: "#4d9fe3",
+      type: 4,
+      bg: "#4d9fe3",
+      name: "男性"
+    }, {
+      personSum: data.womanSum,
+      color: "#ea8480",
+      type: 4,
+      bg: "#ea8480",
+      name: "女性"
+    }]
+    if (data.specialTagRankings.length > 0) {
+      this.specialTagRankings = data.specialTagRankings.sort(sortByNum).slice(0, 3)
+    }
+    // console.log(this.zodiac)
+    // console.log(this.constellation)
+    // console.log(this.blood)
+
+
+    if (this.zodiac && this.zodiac.length > 0) {
+      addColor(this.zodiac, 1)
+      this.draw(this.zodiac, "ringCanvas1", "星座排行")
+      this.zodiacList = this.formattData(this.zodiac, 1)
+    }
+    if (this.constellation && this.constellation.length > 0) {
+      addColor(this.constellation, 2)
+      this.draw(this.constellation, "ringCanvas2", "属相排行")
+      this.constellationList = this.formattData(this.constellation, 2)
+    }
+    if (this.blood && this.blood.length > 0) {
+      addColor(this.blood, 3)
+      this.draw(this.blood, "ringCanvas3", "血型排行")
+      this.bloodList = this.formattData(this.blood, 3)
+    }
+    if (this.tags && this.tags.length > 0) {
+      addColorRodom(this.tags)
+    }
+    if (this.gender) {
+      this.draw(this.gender, "ringCanvas4", "性别比例")
+    }
+    this.treeLevel = createTreeTitle(data.allSum)
+    this.$apply()
+
+    wx.hideLoading()
+  }
+  formattData(data, type) {
+    let res = [], handler = null, count = 0
+    data.map(item => {
+      count += item.personSum
+      let name;
+      if (type === 1) {
+        name = this.zodiacHandler(item.name)
+      } else if (type == 2) {
+        name = this.constellationHandler(item.name)
+      } else {
+        name = this.bloodHandler(item.name)
+      }
+      res.push({
+        name: name,
+        personNumber: item.personSum,
+        bg: item.color
+      })
+    })
+    if (type !== 3) {
+      res.push({
+        name: "其他",
+        personNumber: this.AllPERSONNUMBER - count,
+        bg: "#D8D8D8"
+      })
+    } else {
+      let other = data.find(v => v.name == "5")
+      if (!other) {
+        res.push({
+          name: "其他",
+          personNumber: this.AllPERSONNUMBER - count,
+          bg: "#D8D8D8"
+        })
+      }
+    }
+
+    return res
+  }
+  draw(data, id, title) {
+
+    let series = [], count = 0; //前三名的星座人数计数
+    data.map((item, index) => {
+      count += item.personSum
+      series.push({
+        // name: this.constellationHandler(item.name),
+        data: item.personSum,
+        stroke: false,
+        color: item.color
+      })
+    })
+    if (title !== "血型排行") {
+      series.push({
+        name: "其它",
+        data: this.AllPERSONNUMBER - count,
+        stroke: false,
+        color: "#D8D8D8"
+      })
+    } else if (title !== '性别比例') {
+      let other = data.find(v => v.name == "5")
+      if (!other) {
+        series.push({
+          name: "其他",
+          data: this.AllPERSONNUMBER - count,
+          stroke: false,
+          color: "#D8D8D8"
+        })
+      }
+    }
+
+
+    var option = {
+      id: id,
+      series: series,
+      // title: title,
+      style: {
+        CW: 200,
+        CH: 200,
+        ringWidth: 20
+      }
+    }
+    this.renderRing(option)
+  }
+  renderRing(option) {
+    var ringChart
+
+    ringChart = new wxCharts({
+      animation: true,
+      canvasId: option.id,
+      type: 'ring',
+      extra: {
+        ringWidth: option.style.ringWidth
+        // pie: {
+        //   offsetAngle: -45
+        // }
+      },
+      // title: {
+      //   name: option.title,
+      //   color: '#7cb5ec',
+      //   fontSize: 25
+      // },
+      // subtitle: {
+      //   name: '',
+      //   color: '#666666',
+      //   fontSize: 15
+      // },
+      series: option.series,
+      disablePieStroke: true,
+      width: option.style.CW,
+      height: option.style.CH,
+      dataLabel: false,
+      legend: false,
+      background: '#ffffff',
+      padding: 0
+    });
+    // ringChart.addEventListener('renderComplete', () => {
+    //   console.log('renderComplete');
+    // });
+    let t = setTimeout(() => {
+      ringChart.stopAnimation();
+      clearTimeout(t)
+    }, 500);
+  }
+
+  bloodHandler(n) {
+    return ["A", "B", "AB", "O", "其他"][Number(n) - 1]
+  }
+  zodiacHandler(n) {
+    return ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"][Number(n) - 1]
+  }
+  constellationHandler(n) {
+    return ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "魔羯座", "水瓶座", "双鱼座"][Number(n) - 1]
+  }
+}
+function sort(a, b) {
+  return b.proportion - a.proportion
+}
+function sortByNum(a, b) {
+  return b.likeNum - a.likeNum
+}
+
+function addColor(data, type) {
+  let color = ["#f7c02f", "#4d9fe3", "#ea8480", "#76b445", "#D8D8D8"]
+  data.map((item, index) => {
+    if (type === 3) {
+      item.color = color[parseInt(item.name) - 1]
+    } else {
+      item.color = color[index]
+    }
+  })
+}
+
+function addColorRodom(data) {
+  let color = ["#f7c02f", "#4d9fe3", "#ea8480", "#76b445"]
+  color = shuffle(color)
+  data.map((item, index) => {
+    item.color = color[index] ? color[index] : color[Math.floor(Math.random() * 4)]
+  })
+}
+
+</script>
+
+<style lang="less">
+@import '../css/data_detail.less';
+page {
+  background: #dbf2c5;
+}
+
+.dataDetailBox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #dbf2c5;
+  .dataDetailBanner {
+    width: 100%;
+    height: 320rpx;
+    position: relative;
+    .dataDetaiImage {
+      width: 100%;
+      height: 240rpx;
+    }
+    .data_btn {
+      width: 100%;
+      height: 100rpx;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      position: absolute;
+      top: 150rpx;
+      &>button {
+        width: 170rpx;
+        height: 60rpx;
+        background: #59a1cf;
+        border: 2rpx solid #fff;
+        font-size: 30rpx;
+        color: #fff;
+        line-height: 60rpx;
+        padding: 0 12rpx;
+      }
+    }
+  }
+  .b {
+    width: 95%;
+    position: absolute;
+    top: 240rpx;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    margin-bottom: 20rpx;
+    .dataDetailContainer {
+      width: 100%;
+      background: #fff; // padding-top: 30rpx;
+      margin-bottom: 20rpx;
+      padding: 30rpx 0;
+      margin: 0 auto;
+      border-radius: 10rpx;
+      background: #fff;
+      min-height: 500rpx;
+      .lvsidai {
+        width: 320rpx;
+        height: 80rpx;
+        background: red;
+        margin: 0 auto;
+        background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/lvsidai.png);
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        color: #fff;
+        text-align: center;
+        font-size: 30rpx;
+        line-height: 80rpx;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+      }
+      .huang{
+        width: 100%;
+        text-align: center;
+        margin-top: 40rpx;
+        .huangTitle{
+          color: #c84804;
+          font-size: 26rpx;
+        }  
+        .huangsidai{
+          width: 320rpx;
+          height: 80rpx;
+          margin: 0 auto;
+          background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-2-8/treeLevel.png);
+          background-position: center;
+          background-size: contain;
+          background-repeat: no-repeat;
+          color: #fff;
+          text-align: center;
+          font-size: 30rpx;
+          line-height: 90rpx;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;        
+        }        
+      }
+      
+      .dataperson-title {
+        width: 95%;
+        height: 80rpx;
+        text-align: center;
+        font-size: 40rpx;
+        color: #2c2c2a;
+        margin: 0 auto;
+        line-height: 80rpx;
+        font-weight: border;
+      }
+      .dataHasThree {
+        width: 100%;
+        height: 350rpx;
+        margin: 0 auto;
+        position: relative;
+
+        .dataPersonAll {
+          width: 126rpx;
+          height: 126rpx;
+          /*margin: 0 auto;*/
+          position: relative;
+          padding-top: 20rpx;
+          .dataPersonAllOne {
+            width: 120rpx;
+            height: 120rpx;
+            background: #51699c;
+            border-radius: 60rpx;
+            border: 3rpx solid #ffdc3b;
+            text-align: center;
+            position: relative;
+            .dataDetaiImages {
+              width: 120rpx;
+              height: 120rpx;
+              position: absolute;
+              top: 0rpx;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              margin: 0 auto;
+              object-fit: cover;
+              border-radius: 100%;
+            }
+          }
+          .pt1 {
+            width: 230rpx;
+            height: 80rpx;
+            position: absolute;
+            bottom: -30rpx;
+            left: -52rpx;
+            background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/sidai.png) no-repeat;
+            background-position: center;
+            background-size: contain;
+            font-size: 24rpx;
+            line-height: 80rpx;
+            text-align: center;
+            color: #925f46;
+          }
+          .pt2 {
+            width: 220rpx; 
+            height: 60rpx;
+            line-height: 60rpx;
+            font-size: 32rpx;
+            text-align: center;
+            position: absolute;
+            left: -52rpx;
+            bottom: -60rpx;
+            color: #925f46;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-break: keep-all;
+          }
+        }
+        .dataone {
+          margin: 0 auto;
+        }
+
+        .datatwo {
+          position: absolute;
+          left: 55rpx;
+          top: 120rpx;
+        }
+
+        .datathree {
+          position: absolute;
+          right: 55rpx;
+          top: 120rpx;
+        }
+      }
+
+      .dataHasTwo {
+        width: 100%;
+        height: 280rpx;
+        margin: 0 auto;
+        position: relative; // background: red;
+        .dataPersonAll-2 {
+          width: 126rpx;
+          height: 126rpx;
+          /*margin: 0 auto;*/
+          position: relative;
+          padding-top: 20rpx;
+          .dataPersonAllOne {
+            width: 120rpx;
+            height: 120rpx;
+            background: #51699c;
+            border-radius: 60rpx;
+            border: 3rpx solid #ffdc3b;
+            text-align: center;
+            position: relative;
+            .dataDetaiImages {
+              width: 120rpx;
+              height: 120rpx;
+              position: absolute;
+              top: 0rpx;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              margin: 0 auto;
+              object-fit: cover;
+              border-radius: 100%;
+            }
+          }
+          .pt1 {
+            width: 230rpx;
+            height: 80rpx;
+            position: absolute;
+            bottom: -30rpx;
+            left: -52rpx;
+            background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/sidai.png) no-repeat;
+            background-position: center;
+            background-size: contain;
+            font-size: 24rpx;
+            line-height: 80rpx;
+            text-align: center;
+            color: #925f46;
+          }
+          .pt2 {
+            width: 220rpx; 
+            height: 60rpx;
+            line-height: 60rpx;
+            font-size: 32rpx;
+            text-align: center;
+            position: absolute;
+            left: -52rpx;
+            bottom: -60rpx;
+            color: #925f46;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-break: keep-all;
+          }
+        }
+
+
+        .left {
+          position: absolute;
+          left: 120rpx;
+          top: 40rpx;
+        }
+        .right {
+          position: absolute;
+          right: 120rpx;
+          top: 40rpx;
+        }
+        .datathree {
+          position: absolute;
+          right: 120rpx;
+          top: 120rpx;
+        }
+      }
+      .dataHasOne {
+        width: 100%;
+        height: 280rpx;
+        margin: 0 auto;
+        position: relative; // background: red;
+        .dataPersonAll {
+          width: 126rpx;
+          height: 126rpx;
+          /*margin: 0 auto;*/
+          position: relative;
+          padding-top: 20rpx;
+          .dataPersonAllOne {
+            width: 120rpx;
+            height: 120rpx;
+            background: #51699c;
+            border-radius: 60rpx;
+            border: 3rpx solid #ffdc3b;
+            text-align: center;
+            position: relative;
+            .dataDetaiImages {
+              width: 120rpx;
+              height: 120rpx;
+              position: absolute;
+              top: 0rpx;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              margin: 0 auto;
+              object-fit: cover;
+              border-radius: 100%;
+            }
+          }
+          .pt1 {
+            width: 230rpx;
+            height: 80rpx;
+            position: absolute;
+            bottom: -30rpx;
+            left: -52rpx;
+            background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/sidai.png) no-repeat;
+            background-position: center;
+            background-size: contain;
+            font-size: 24rpx;
+            line-height: 80rpx;
+            text-align: center;
+            color: #925f46;
+          }
+          .pt2 {
+             width: 220rpx; 
+            height: 60rpx;
+            line-height: 60rpx;
+            font-size: 32rpx;
+            text-align: center;
+            position: absolute;
+            left: -52rpx;
+            bottom: -60rpx;
+            color: #925f46;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-break: keep-all;
+          }
+        }
+
+        .dataone {
+          margin: 0 auto;
+          padding-top: 40rpx;
+        }
+      } // .dataPerson {
+      //   width: 100%;
+      //   height: 350rpx;
+      //   margin: 0 auto;
+      //   position: relative;
+      //   .dataPersonAll {
+      //     width: 126rpx;
+      //     height: 126rpx;
+      //     /*margin: 0 auto;*/
+      //     position: relative;
+      //     padding-top: 20rpx;
+      //     .dataPersonAllOne {
+      //       width: 120rpx;
+      //       height: 120rpx;
+      //       background: #51699c;
+      //       border-radius: 60rpx;
+      //       border: 3rpx solid #ffdc3b;
+      //       text-align: center;
+      //       .dataDetaiImages {
+      //         width: 80%;
+      //         height: 50rpx;
+      //         padding-top: 15rpx;
+      //       }
+      //     }
+      //     .pt1 {
+      //       width: 230rpx;
+      //       height: 80rpx;
+      //       position: absolute;
+      //       bottom: -30rpx;
+      //       left: -52rpx;
+      //       background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-1-25/sidai.png) no-repeat;
+      //       background-position: center;
+      //       background-size: contain;
+      //       font-size: 24rpx;
+      //       line-height: 80rpx;
+      //       text-align: center;
+      //       color: #925f46;
+      //     }
+      //   }
+      //   .dataone {
+      //     margin: 0 auto;
+      //   }
+      //   .datatwo {
+      //     position: absolute;
+      //     left: 55rpx;
+      //     top: 120rpx;
+      //   }
+      //   .datathree {
+      //     position: absolute;
+      //     right: 55rpx;
+      //     top: 120rpx;
+      //   }
+      // }
+      .dataRanking {
+        /*margin-top: 40rpx;*/
+        .apply {
+          width: 95%;
+          height: 80rpx;
+          text-align: center;
+          margin: 0 auto;
+          line-height: 80rpx;
+          padding-bottom: 30rpx;
+          color: #2c2c2a;
+          font-size: 40rpx;
+          font-weight: border;
+        }
+        .listRank {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 670rpx;
+          height: 160rpx;
+          background: #f5f5f5;
+          margin: 0 auto;
+          border-radius: 50px;
+          margin-bottom: 20rpx;
+          .listRankLeft {
+            display: flex;
+            /*justify-content: space-around;*/
+            align-items: center;
+            width: 52%;
+            .datavator {
+              width: 100rpx;
+              height: 100rpx;
+              border-radius: 100%;
+              background: #51699c;
+              border: 4rpx solid #ffd648;
+              position: relative;
+              margin-left: 10rpx;
+              box-sizing: border-box;
+              /*overflow: hidden;*/
+              .ll {
+                width: 96rpx;
+                height: 96rpx;
+                text-align: center;
+                &>image {
+                  /*width: 70rpx;*/
+                  position: absolute;
+                  /*top: 0;*/
+                  bottom: 0rpx;
+                  /*top: 0;*/
+                  left: 0;
+                  right: 0;
+                  margin: 0 auto;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  border-radius: 100%;
+                }
+              }
+            }
+            &>text {
+              width: 160rpx;
+              /*height: 60rpx;*/
+              color: #313131;
+              font-size: 36rpx;
+              padding-left: 20rpx;
+              text-overflow: -o-ellipsis-lastline;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-line-clamp: 1;
+              -webkit-box-orient: vertical;
+            }
+          }
+          .listRankRight {
+            width: 48%;
+            height: 50rpx;
+            text-align: center;
+            margin-right: 8rpx;
+            &>text {
+              /*width: 220rpx;*/
+              /*width: 80%;*/
+              height: 50rpx;
+              font-size: 32rpx;
+              padding: 3rpx 30rpx;
+              border-radius: 30rpx;
+              /* text-overflow: -o-ellipsis-lastline;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            white-space: nowrap;
+            -webkit-box-orient: vertical;  
+            display: inline-block;*/
+            }
+          }
+        }
+      }
+      .starRank {
+        width: 100%;
+        height: 500rpx;
+        margin-top: 20rpx;
+        position: relative;
+        .starRanktitle {
+          text-align: center;
+          &>text {
+            width: 240rpx;
+            height: 60rpx;
+            line-height: 60rpx;
+            display: inline-block;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 40rpx;
+            color: #2c2c2a;
+            font-weight: border;
+          }
+        }
+
+        .canvas {
+          width: 200px;
+          height: 200px;
+          /*margin: 0 auto;*/
+        }
+        .starRankDetail {
+          width: 250rpx;
+          /*height: 80rpx;*/
+          margin: 0 auto;
+          line-height: 80rpx;
+          display: flex;
+          flex-direction: column;
+          /*justify-content: space-around;*/
+          /*align-items: center;*/
+          font-size: 32rpx;
+          position: absolute;
+          right: 30rpx;
+          top: 120rpx;
+          .starRankDetailA {
+            &>view {
+              width: 30rpx;
+              height: 30rpx;
+              border-radius: 15rpx;
+              background: #ffd648;
+              display: inline-block;
+              margin-right: 20rpx;
+            }
+          }
+        }
+      }
+      .bloodRank {
+        width: 670rpx;
+        /*height: 100rpx;*/
+        padding-top: 100rpx;
+        display: flex;
+        margin: 0 auto;
+        justify-content: space-around;
+        align-items: center;
+        padding-bottom: 20rpx;
+        .bloodRankDetail {
+          width: 25%;
+          position: relative;
+          font-size: 32rpx;
+          .p1 {
+            width: 120rpx;
+            height: 40rpx;
+            text-align: center;
+            margin-top: 50rpx;
+          }
+        }
+      }
+      .ccd{
+        width: 100%;
+        height: 40rpx;
+        text-align: center;
+        line-height: 40rpx;
+        position: absolute;
+        bottom: 20rpx;
+        color: #a5a5a5;
+        font-size: 28rpx;
+      }      
+    }
+  }
+}
+
+.dataAdd {
+  width: 95%;
+  position: absolute;
+  top: 240rpx;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  margin-bottom: 20rpx;
+  .dataDetailContainer {
+    width: 100%;
+    background: #fff;
+    padding-top: 80rpx;
+    margin-bottom: 20rpx;
+    margin: 0 auto;
+    border-radius: 10rpx;
+    background: #fff;
+    text-align: center;
+    &>image {
+      width: 140rpx;
+    }
+    .p1 {
+      padding-top: 42rpx;
+      font-size: 40rpx;
+      color: #2c2c2a;
+      padding-bottom: 50rpx;
+    }
+    .p2 {
+      font-size: 34rpx;
+      color: #a3a3a3;
+      padding-bottom: 20rpx;
+    }
+  }
+}
+
+.back_btn {
+  width: 180rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 40rpx;
+  right: 10rpx;
+  &>image {
+    width: 100%;
+  }
+}
+</style>

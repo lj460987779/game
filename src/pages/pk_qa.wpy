@@ -1,0 +1,594 @@
+<template>
+  <view class="pkQaBox" style="height:{{wHeight}}px;background: #dbf2c5;">
+    <view class="answer_process {{done?'fadeOut1':''}}">
+      <view class="pkQabanner">
+        <image src='/static/images/jiazupk.png' mode="widthFix" class="pkQaBannerImage"></image>       
+      </view>
+      <view class="d">
+
+        <view class="box" style="width:{{cWidth}}px;transform:translate(-{{wWidth*count}}px,0);">
+          <!-- <view class="box" style="width:{{cWidth*2}}rpx;"> -->
+
+          <view wx:for="{{questions}}" wx:for-item="q" class="question " style="width:{{wWidth-7}}px;" wx:key="q">
+            <view class="Lim">
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+              <li class="Lim_li">
+                <span class="g">
+                  <span></span>
+                </span>
+
+              </li>
+
+            </view>
+            <view class="title" style="padding-top: 60rpx;">
+              <view>你有一位亲人，</view>
+              <view>大家对Ta的印象是:</view>
+            </view>
+            <view class="tag " style="">
+              <view class='tagItem' wx:for="{{q.tagList}}" wx:for-item="item" wx:key="item" style="border:1.5px solid {{item.border}};color:{{item.border}}">
+                {{item.tagName}}
+              </view>
+            </view>
+            <view class="title" style="padding-top: 20rpx;">猜猜Ta是谁:</view>
+            <view class="answer">
+              <view class="answerItem {{item.class}}" wx:for-index="idx" wx:for="{{q.answerList}}" wx:for-item="item" wx:key="item" @tap="answerTap({{item.personId}},{{idx}})">
+                {{item.name}}
+                <view class="answerTips" wx:if="{{item.class==='success'}}">
+                  <image src='/static/images/pkright.png' mode="widthFix" class="d1"></image>
+                </view>
+                <view class="answerTips" wx:if="{{item.class==='wrong'}}">
+                  <image src='/static/images/pkerror.png' mode="widthFix" class="d2"></image>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' @tap="back" mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {
+  pk_getQAAPkList, pk_resultSave, tree_joinTreeUpdate
+} from '../api/index'
+import { shuffle, getRandomArrayElements, guid } from '../utils/index.js'
+
+/*
+*
+*{
+      tagList: ['挂比', '丑', '一天睡25小时', '29杀', '表面兄弟', '克里斯关下门'],
+      answerList: ['五五开', 'aab', '卢本伟', 'UU妹'],
+      answer: "五五开"
+    },
+    {
+      tagList: ['可爱', '最能吃辣', '一天睡25小时', '帅哥', '美女', '最喜欢出去游玩的'],
+      answerList: ['德云色', '西西卡', '孙业尤', '米姥爷'],
+      answer: '德云色'
+    },
+    {
+      tagList: ['可爱', '最能吃辣', '一天睡25小时', '帅哥', '美女', '最喜欢出去游玩的'],
+      answerList: ['德云色', '西西卡', '孙业尤', '米姥爷'],
+      answer: '德云色'
+    }
+*
+*/
+export default class pkQa extends wepy.page {
+  config = {
+    navigationBarTitleText: '亲人猜一猜'
+  }
+  data = {
+    flag: null,
+    userInfo: {},
+    token: null,
+    wWidth: null,
+    cWidth: null,
+    move: null,
+    count: 0,
+    trueAnswerIndex: null,
+    choseIndex: null,
+    questions: [
+    ],
+    trueCount: 0,
+    wrongCount: 0,
+    done: false,
+    treeId: null,
+    wHeight: 0,
+    finished: [false, false, false],
+    treeName:null
+  }
+  methods = {
+    back() {
+      wepy.navigateBack({
+        delta: 1
+      })
+    },
+    async answerTap(item, idx) {
+      if (this.finished[this.count]) {
+        return
+      } else {
+        this.finished[this.count] = true
+        this.$apply()
+      }
+      let answerList = this.questions[this.count].answerList
+      const trueAnswer = this.questions[this.count].answer
+
+      const trueAnswerIndex = answerList.findIndex(_item => {
+        return _item.personId == trueAnswer
+      })
+      this.trueAnswerIndex = trueAnswerIndex
+      answerList.map((item, index) => {     //显示结果，正确答案显示绿色，选错误的话显示红色，其余不相干的fadeOut
+        item.class = index == idx && index !== trueAnswerIndex ? 'wrong' : index == trueAnswerIndex ? 'success' : 'fadeOut'
+
+      })
+
+
+
+      //答对打错计数
+      const token = this.userInfo.token
+      let isTrue = null
+      if (trueAnswerIndex == idx) {
+        this.trueCount++
+        isTrue = 1
+      } else {
+        this.wrongCount++
+        isTrue = 0
+      }
+
+      //提交每道题的答题结果
+      try {
+        await pk_resultSave({
+          pkId: this.uuid,
+          personId: trueAnswer,
+          scoreType: isTrue
+        }, token)
+      } catch (e) {
+        wepy.showToast({
+          title: `保存答题结果失败,请重试`,
+          icon: 'loading',
+          duration: 2000
+        })
+      }
+      this.choseIndex = idx
+      let t = setTimeout(() => {
+        if (!(this.count + 1 < this.questions.length)) {
+          this.done = true
+
+          wepy.redirectTo({
+            url: './pk_grade?count=' + (this.count + 1) + "&treeId=" + this.treeId + "&trueCount=" + this.trueCount + "&flag=" + this.flag
+          })
+          this.$apply()
+          return
+        }
+        this.count++
+        this.$apply()
+        clearTimeout(t)
+      }, 1500)
+      this.$apply()
+    }
+  }
+  components = {}
+  getSystemInfo() {
+    return new Promise(resolve => {
+      wepy.getSystemInfo({
+        success: (res) => {
+          this.wHeight = res.windowHeight
+          this.wWidth = res.windowWidth
+          this.$apply()
+          resolve()
+        }
+      })
+    })
+  }
+  randomBorder() {
+    return ["#f7c02f", "#76b445", "#4d9fe3", "#ea8480"][Math.floor(Math.random() * 4)]
+  }
+  async onLoad(options) {
+    this.treeId = options.treeId
+    this.treeName = options.treeName
+    await this.getSystemInfo()
+    this.uuid = guid()
+    const treeId = options.treeId
+    this.flag = options.flag
+
+    try {
+      const userInfo = await this.$parent.getUserInfo()
+      this.userInfo = userInfo
+      this.token = userInfo.token
+    } catch (e) {
+      wepy.showToast({
+        title: `出错啦`,
+        icon: 'loading',
+        duration: 3000
+      })
+      return
+    }
+
+
+    const isShared = options.isShared
+    if (isShared == '1') {
+      console.log("是分享的")
+      await tree_joinTreeUpdate({
+        treeId
+      }, this.token)
+    }
+
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+      }
+    })
+    try {
+      var res = await pk_getQAAPkList({ treeId }, this.token)
+    } catch (e) {
+      wepy.showToast({
+        title: `获取家人猜一猜数据失败,请重试。`,
+        icon: 'loading',
+        duration: 3000
+      })
+      return
+    }
+    let questions = []
+    let q_counts = 0;
+    res.data.data.map(item => {
+      q_counts++
+      if (q_counts > 5) return
+      let q_item = {}
+      //获取顶部提示标签列表
+      let tagList = []
+      item.personInfo.tags.map(tag => {
+        tagList.push({
+          tagName: tag.tag,
+          border: this.randomBorder()
+        })
+      })
+      const choseLength = tagList.length > 5 ? 5 : tagList.length
+      q_item.tagList = getRandomArrayElements(tagList, choseLength)
+      //正确答案
+      q_item.answer = item.personInfo.personId
+
+      //所有备选选项
+      let _answerList = []
+      const seed = Math.floor(Math.random() * 3)    //三个选一个不push进备选答案中
+      item.otherPersons.map((p, i) => {
+        if (i == seed) {
+          return
+        }
+        _answerList.push({
+          // name: p.surname + p.name,
+          name: p.appellation,
+          personId: p.personId,
+          isTrue: null
+        })
+      })
+
+      _answerList.push({
+        // name: item.personInfo.surname + item.personInfo.name,
+        name: item.personInfo.appellation,
+        personId: item.personInfo.personId
+      })
+      _answerList = shuffle(_answerList)
+      q_item.answerList = _answerList
+
+      questions.push(q_item)
+      this.questions = questions
+
+      this.cWidth = this.wWidth * questions.length //设置滑动屏的总宽度
+      this.$apply()
+    })
+
+    // this.question.map(item => {
+    //   let answers = []
+    //   item.answerList.map(_item => {
+    //     answers.push({
+    //       content: _item,
+    //       class: 'normal'
+    //     })
+    //   })
+    //   item.answerList = answers
+    // })
+  }
+}
+
+</script>
+
+<style lang="less">
+/*@import '../css/pk_qa.less';*/
+
+
+/*page {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-bottom: 2000px;
+  margin-bottom: -2000px;
+  overflow: hidden;
+}*/
+
+.answer_process {
+  /*width: 100%;
+  height: 100%;
+  background: #dbf2c5;*/
+}
+
+.pkQaBox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.pkQabanner {
+  width: 100%;
+  height: 320rpx;
+  /*background: red;*/
+  .pkQaBannerImage {
+    width: 100%;
+    height: 240rpx;
+  } 
+}
+
+
+
+.d {
+  width: 100%;
+  position: absolute;
+  top: 240rpx;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  /*overflow-x: hidden;*/
+}
+
+.box {
+  width: auto;
+  height: 100%;
+  font-size: 34rpx;
+  display: flex;
+  flex-direction: row;
+  transition: transform 1s;
+  height: auto;
+  /*margin-top: -20rpx;*/
+  /*padding-bottom: 50rpx;*/
+}
+
+.question {
+  border-radius: 10rpx;
+  margin-left: 7px;
+  background: #fff;
+  margin-right: 7px;
+  padding-bottom: 30rpx;
+  .tag,
+  .answer {
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 20rpx;
+    padding-top: 20rpx;
+    font-size: 36rpx;
+  }
+  .title {
+    padding-left: 30rpx;
+    font-size: 42rpx;
+    color: #313131;
+    border: 500;
+  }
+  .answer {
+    width: 95%;
+    margin: 0 auto;
+    text-align: center;
+    &>view {
+      width: 90%;
+      height: 60rpx;
+      background: #f7c02f;
+      line-height: 60rpx;
+      text-align: center;
+      border-radius: 60rpx;
+      padding: 10rpx;
+      margin: 10px;
+      color: #915e47;
+      position: relative;
+      .answerTips {
+        position: absolute;
+        top: 50%;
+        right: 40rpx;
+        transform: translate(0, -50%);
+        color: #fff;
+        .d1 {
+          width: 30rpx;
+        }
+        .d2 {
+          width: 25rpx;
+        }
+      }
+    }
+  }
+  .tagItem {
+    border-radius: 40rpx;
+    padding: 6rpx 30rpx;
+    margin: 5px;
+    /*border: 1px solid skyblue;*/
+  }
+}
+
+.back_btn {
+  width: 180rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 40rpx;
+  right: 10rpx;
+  &>image {
+    width: 100%;
+  }
+}
+
+.Lim {
+  height: 00rpx;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fff;
+  .Lim_li {
+    transform: rotate(180deg);
+    .g {
+      width: 20rpx;
+      height: 20rpx;
+      border-radius: 20rpx;
+      border: 2px solid #915e47;
+      display: inline-block;
+      /*transform: translateY(30rpx);*/
+      &>span {
+        width: 20rpx;
+        height: 60rpx;
+        background: #f7c02f;
+        border-radius: 40rpx;
+        display: inline-block;
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 动效 */
+
+.fadeOut {
+  animation: fadeOut 0.3s ease-in;
+  animation-fill-mode: both;
+}
+
+.fadeOut1 {
+  animation: fadeOut 0.5s ease-in;
+  animation-fill-mode: both;
+  display: none;
+}
+
+.fadeIn {
+  animation: fadeIn 0.3s ease-in;
+  animation-fill-mode: both;
+}
+
+.success {
+  animation: SuccessBgIn 0.3s ease-in;
+  animation-fill-mode: both;
+}
+
+.wrong {
+  animation: wrongBgIn 0.3s ease-in;
+  animation-fill-mode: both;
+}
+
+@keyframes SuccessBgIn {
+  0% {
+    background: rgba(255, 255, 255, 1);
+  }
+  100% {
+    color: #fff;
+    background: rgba(118, 180, 69, 1);
+  }
+}
+
+// @keyframes wrongBgIn {
+//     0% {
+//         background: rgba(255, 255, 255, 1);
+//     }
+//     100% {
+//         background: rgba(220, 20, 60, 1);
+//     }
+// }
+@keyframes wrongBgIn {
+  from {
+    transform: none;
+    background: rgba(255, 255, 255, 1);
+  }
+  15% {
+    transform: translate3d(-25%, 0, 0) rotate3d(0, 0, 1, -5deg);
+  }
+  30% {
+    transform: translate3d(20%, 0, 0) rotate3d(0, 0, 1, 3deg);
+  }
+  45% {
+    transform: translate3d(-15%, 0, 0) rotate3d(0, 0, 1, -3deg);
+  }
+  60% {
+    transform: translate3d(10%, 0, 0) rotate3d(0, 0, 1, 2deg);
+  }
+  75% {
+    transform: translate3d(-5%, 0, 0) rotate3d(0, 0, 1, -1deg);
+  }
+  to {
+    transform: none;
+    color: #fff;
+    background: rgba(255, 90, 84, 1);
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}
+</style>

@@ -1,0 +1,593 @@
+
+
+<template>
+  <view class="createBox" style="height:{{wHeight}}px">
+    <view class="createBanner">
+      <image src='/static/images/createtree.png' mode="widthFix" class="createBannerImage"></image>
+    </view>
+    <view class="createContainer">
+      <view class="swiper-tab">
+        <view class="swiper-tab-list {{currentTab==0 ? 'on' : 'on1'}}" data-current="0" @tap="switchNav">爷爷家</view>
+        <view class="swiper-tab-list {{currentTab==1 ? 'on' : 'on1'}}" data-current="1" @tap="switchNav">外公家</view>
+      </view>
+
+      <view class="swiper-box">
+        <!-- <swiper-item> -->
+        <!--爷爷家-->
+        <view class="s1" wx:if="{{currentTab==0}}">
+          <view class="createitem createitem1">
+            <label class="createitem1Label1" style="margin-right: 10rpx;">爷爷有</label><input name="son1" type="number" @input="son1Input" @blur="son1CoutBlur" class="createitem1put1" />
+            <label style="margin-left: 10rpx;">个儿子</label>
+            <label style="margin-left: 20rpx;margin-right: 10rpx;">有</label><input name="daughter1" type="number" @blur="daughter1CoutBlur" class="createitem1put1" />
+            <label style="margin-left: 10rpx;">个女儿</label>
+          </view>
+
+          <view class="createitem createitem2">
+            <label style=" text-align:justify;text-align-last:justify;">爸爸的名字:</label><input name="fatherName" maxlength="8" type="text" class="createitem1put2" @input="fatherBlur" />
+          </view>
+          <view class="createitem ">
+            <picker bindchange="bindFatherRankChange" value="{{fatherRankIndex}}" range="{{fatherRank}}">
+              <view class="createitem3">
+                <label class="label3">他在<text style="color:#DE252A">兄弟</text>中排行:</label>
+                <view class="picker">
+                  {{fatherRank[fatherRankIndex]}}
+                </view>
+              </view>
+            </picker>
+          </view>
+          <view class="createitem ">
+            <radio-group bindchange="radioChange1">
+              <label class="labelitem4">我的性别:</label>
+              <label class="radio" wx:for="{{radio1items}}" style="" class="labelitems5" wx:for-item="item" wx:key="item">
+                <radio  value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+              </label>
+            </radio-group>
+          </view>
+          <view class="createitem createitem2">
+            <label>家族树的名称:</label><input name="treeName" class="createitem1put2" maxlength="8" @input="tree1Blur" value="爸爸的家族树" />
+          </view>
+        </view>
+
+        <!-- </swiper-item> -->
+        <!-- <swiper-item> -->
+        <!--外公家-->
+        <view class="s1" wx:if="{{currentTab==1}}">
+          <view class="createitem createitem1">
+            <label class="createitem1Label1" style="margin-right: 10rpx;">外公有</label><input name="son2" type="number" class="createitem1put1" @blur="son2CountBlur" />
+            <label style="margin-left: 10rpx;">
+              <text>个</text>儿子</label>
+            <label style="margin-left: 20rpx;margin-right: 10rpx;">有</label><input name="daughter1" type="number" class="createitem1put1" @input="daughter2Input" @blur="daughter2CountBlur" style="display: inline-block;" />
+            <label style="margin-left: 10rpx;">个女儿</label>
+          </view>
+          <view class="createitem createitem2">
+            <label>妈妈的名字:</label><input name="motherName" class="createitem1put2" maxlength="8" @input="motherBlur" />
+          </view>
+          <view class="createitem ">
+            <picker bindchange="bindMotherRankChange" value="{{motherRankIndex}}" range="{{motherRank}}">
+              <view class="createitem3">
+                <label class="label3">她在<text style="color:#DE252A">姐妹</text>中排行:</label>
+                <view class="picker">
+                  {{motherRank[motherRankIndex]}}
+                </view>
+              </view>
+            </picker>
+          </view>
+          <view class="createitem ">
+            <radio-group bindchange="radioChange2">
+              <label style="" class="labelitem4">我的性别:</label>
+              <label class="radio" wx:for="{{radio1items}}" class="labelitems5" wx:for-item="item" wx:key="item">
+                <radio value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+              </label>
+            </radio-group>
+          </view>
+
+          <view class="createitem createitem2">
+            <label>家族树的名称:</label><input name="treeName" class="createitem1put2" maxlength="8" @input="tree2Blur" value="妈妈的家族树" />
+          </view>
+        </view>
+
+        <!-- </swiper-item> -->
+
+      </view>
+
+    </view>
+    <view class="btn-area">
+      <button @tap="submit">种下家族树</button>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' @tap="back" mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+import { rankCalculate } from '../utils/index.js'
+import { tree_addTree } from '../api/index'
+const broadcast = require('../utils/broadcast')
+
+export default class create extends wepy.page {
+  config = {
+    navigationBarTitleText: '制作家谱'
+  }
+  data = {
+    count1: '',    //爷爷家的儿子个数
+    count2: '',    //姥姥家的女儿个数
+    roles1Index: 0,
+    roles2Index: 0,
+    fatherRank: ['老大'],   //爷爷家的儿子排行
+    fatherRankIndex: 0,
+    motherRank: ['老大'],   //姥姥家的女儿排行
+    motherRankIndex: 0,
+    winWidth: 0,
+    winHeight: 0,
+    currentTab: 0,
+    son1: '',
+    son2: '',
+    daughter1: '',
+    daughter2: '',
+    motherName: '',
+    fatherName: '',
+    tree1Name: '爸爸的家族树',
+    tree2Name: '妈妈的家族树',
+    userInfo: null,
+    wHeight: 0,
+    gender1: "男",
+    gender2: "男",
+    radio1items: [
+      { name: '男', value: '男', checked: 'true' },
+      { name: '女', value: '女' }
+    ],
+    radio2items: [
+      { name: '男', value: '男', checked: 'true' },
+      { name: '女', value: '女' }
+    ]
+  }
+  methods = {
+    back() {
+      wepy.navigateBack({
+        delta: 1
+      })
+    },
+    /*
+     * 根据输入的子女的个数动态改变兄弟排行选择器的长度
+    */
+    son1Input(e) {
+      this.son1 = e.detail.value
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("个数不能超过20")
+      //   return
+      // }
+      this.fatherRankIndex = 0
+      this.fatherRank = rankCalculate(e.detail.value, 0)
+      this.$apply()
+    },
+    son1CoutBlur(e) {
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("儿子个数不能超过20")
+      // } else if (Number(e.detail.value) < 1) {
+      //   showModal("儿子个数不能小于1")
+      // }
+    },
+    daughter1CoutBlur(e) {
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("个数不能超过20")
+      // }
+      this.daughter1 = e.detail.value
+      this.$apply()
+    },
+    son2CountBlur(e) {
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("个数不能超过20")
+      // }
+      this.son2 = e.detail.value
+      this.$apply()
+    },
+    daughter2Input(e) {
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("个数不能超过20")
+      //   return
+      // }
+      this.motherRankIndex = 0
+      this.daughter2 = e.detail.value
+      this.motherRank = rankCalculate(e.detail.value, 1)
+      this.$apply()
+    },
+    daughter2CountBlur(e) {
+      // if (Number(e.detail.value) > 20) {
+      //   showModal("女儿个数不能超过20")
+      // } else if (Number(e.detail.value) < 1) {
+      //   showModal("女儿个数不能小于1")
+      // }
+    },
+    motherBlur(e) {
+      this.motherName = e.detail.value
+      this.$apply()
+    },
+    fatherBlur(e) {
+      this.fatherName = e.detail.value
+      this.$apply()
+    },
+    tree1Blur(e) {
+      this.tree1Name = e.detail.value
+    },
+    tree2Blur(e) {
+      this.tree2Name = e.detail.value
+    },
+    bindFatherRankChange(e) {
+      this.fatherRankIndex = e.detail.value
+      this.$apply()
+    },
+    bindMotherRankChange(e) {
+      this.motherRankIndex = e.detail.value
+      this.$apply()
+    },
+    radioChange1(e) {
+      this.gender1 = e.detail.value
+      this.$apply()
+    },
+    radioChange2(e) {
+      this.gender2 = e.detail.value
+      this.$apply()
+    },
+    async submit() {
+      const currentTab = this.currentTab
+      const accessToken = this.userInfo.token
+      let treeInfo = {}, p_num
+      if (currentTab == 0) {
+        p_num = Number(this.son1) + Number(this.daughter1)
+        if (!this.son1) {
+          showModal('请输入爷爷的儿子的个数')
+          return
+        } else if (!this.daughter1) {
+          showModal('请输入爷爷的女儿的个数')
+          return
+        } else if (Number(this.son1) < 1) {
+          showModal('儿子个数不能小于1')
+          return
+        } else if (Number(this.son1) > 20) {
+          showModal('儿子个数不能大于20')
+          return
+        } else if (Number(this.daughter1) > 20) {
+          showModal('女儿个数不能大于20')
+          return
+        } else if (p_num < 1) {
+          showModal('至少要给爷爷选择一个儿子或者女儿')
+          return
+        } else if (!this.fatherName) {
+          showModal('请输入父亲的名字')
+          return
+        } else if (!this.fatherRankIndex && this.fatherRankIndex !== 0) {
+          showModal('请选择父亲的兄弟排行')
+          return
+        } else if (!this.tree1Name) {
+          showModal('请输入家族树的名字')
+          return
+        }
+        treeInfo.gradenPerson = "爷爷"
+        treeInfo.sonSum = Number(this.son1)
+        treeInfo.daughterSum = Number(this.daughter1)
+        treeInfo.parentName = this.fatherName
+        treeInfo.parentRank = Number(this.fatherRankIndex) + 1
+        treeInfo.treeName = this.tree1Name
+        //性别待调试
+        treeInfo.gender = this.gender1 == "男" ? 1 : 2
+      } else {
+        p_num = Number(this.son2) + Number(this.daughter2)
+        if (!this.son2) {
+          showModal('请输入外公的儿子的个数')
+          return
+        } else if (!this.daughter2) {
+          showModal('请输入外公的女儿的个数')
+          return
+        } else if (Number(this.daughter2) < 1) {
+          showModal('女儿个数不能小于1')
+          return
+        } else if (Number(this.daughter2) > 20) {
+          showModal('女儿个数不能大于20')
+          return
+        } else if (Number(this.son2) > 20) {
+          showModal('儿子个数不能大于20')
+          return
+        } else if (p_num < 1) {
+          showModal('至少要给爷爷选择一个儿子或者女儿')
+          return
+        } else if (!this.motherName) {
+          showModal('请输入母亲的名字')
+          return
+        } else if (!this.motherRankIndex && this.motherRankIndex !== 0) {
+          showModal('请选择母亲的兄弟排行')
+          return
+        } else if (!this.tree2Name) {
+          showModal('请输入家族树的名字')
+          return
+        }
+        treeInfo.gradenPerson = "外公"
+        treeInfo.sonSum = Number(this.son2)
+        treeInfo.daughterSum = Number(this.daughter2)
+        treeInfo.parentName = this.motherName
+        treeInfo.parentRank = Number(this.motherRankIndex) + 1
+        treeInfo.treeName = this.tree2Name
+        //性别待调试
+        treeInfo.gender = this.gender2 == "男" ? 1 : 2
+      }
+      try {
+        const res = await tree_addTree(treeInfo, accessToken)
+        console.log(res)
+        const treeId = res.data.data
+        broadcast.fire('person_add_success')
+        // wepy.hideLoading()
+        wepy.redirectTo({
+          url: './tree?treeId=' + treeId + "&flag=N"
+        })
+      } catch (e) {
+      }
+    },
+    // formSubmit1(e) {
+    //   const fatherRank = this.fatherRank[this.fatherRankIndex]
+    //   let treeInfo = e.detail.value
+    //   treeInfo.fatherRank = fatherRank
+    //   console.log(treeInfo)
+    // },
+
+    // formSubmit2(e) {
+    //   const motherRank = this.motherRank[this.motherRankIndex]
+    //   let treeInfo = e.detail.value
+    //   treeInfo.motherRank = motherRank
+    //   console.log(treeInfo)
+    // },
+    // 滑动切换tab 
+    bindChange(e) {
+      this.currentTab = e.detail.current
+      this.$apply()
+    },
+    // 点击tab切换 
+    switchNav(e) {
+      if (this.currentTab === e.target.dataset.current) {
+        return false;
+      } else {
+        this.currentTab = e.target.dataset.current
+        this.$apply()
+      }
+    }
+  }
+  components = {
+  }
+  async onLoad(options) {
+    this.userInfo = await this.$parent.getUserInfo()
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+      }
+    })
+  }
+}
+
+function showModal(msg) {
+  wepy.showModal({
+    title: '提示',
+    content: msg,
+    success: function(res) {
+
+    }
+  })
+}
+</script>
+<style lang="less">
+/*@import '../css/create.less';*/
+
+
+/**/
+
+
+/*page{
+  width: 100%;
+  height: 100%;
+  background: #dbf2c5; 
+  position: relative;
+  padding-bottom: 2000px;margin-bottom:-2000px;
+  overflow: hidden;  
+}*/
+
+.createBox {
+  background: #dbf2c5;
+}
+
+.createContainer {
+  width: 722rpx;
+  height: 700rpx;
+  background: #fff;
+  /*background: red; */
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 180rpx;
+  margin: 0 auto;
+  border-radius: 10rpx;
+}
+
+.createBanner {
+  width: 100%;
+  height: 320rpx;
+  /*background: red;*/
+}
+
+.createBannerImage {
+  width: 100%;
+  height: 240rpx;
+}
+
+.swiper-tab {
+  width: 100%;
+  height: 80rpx;
+  /*border-bottom: 2rpx solid #777777;*/
+  text-align: center;
+  line-height: 80rpx;
+  background: #f3f3f3;
+  border-top-left-radius: 10rpx;
+  border-top-right-radius: 10rpx;
+  color: #a3a3a3
+}
+
+.swiper-tab-list {
+  width: 360rpx;
+  text-align: center;
+  display: inline-block;
+  border-top-left-radius: 10rpx;
+  border-top-right-radius: 10rpx;
+}
+
+.on {
+  color: #313131;
+  background: #fff;
+  transform: scaleY(1.1);
+  /*border-right: 1px solid #313131;*/
+}
+
+.on1 {
+  box-shadow: -2px -2px 10px 0 lightgray inset;
+}
+
+.swiper-box {
+  display: block;
+  height: 100%;
+  width: 100%;
+  /*background: red;*/
+  overflow: hidden;
+}
+
+.swiper-box view {
+  /*text-align: center;*/
+}
+
+.btn-area {
+  width: 100%;
+  /*padding-top: 200rpx;*/
+  position: absolute;
+  left: 0;
+  bottom: 50rpx;
+  margin: 0 auto;
+  background: red;
+  &>button {
+    width: 60%;
+    height: 120rpx;
+    line-height: 120rpx;
+    border-radius: 60rpx;
+    font-size: 40rpx;
+    background: #f7c02f;
+    color: #915e47;
+    position: absolute;
+    bottom: 35rpx;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+  }
+}
+
+.createitem {
+  width: 95%;
+  margin: 0 auto;
+  margin-bottom: 30rpx;
+}
+
+.createitem1put1 {
+  width: 100rpx;
+  height: 80rpx;
+  display: inline-block;
+  background: #dbf2c4;
+  vertical-align: middle;
+  padding-left: 20rpx;
+  color: #898989;
+  font-size: 30rpx;
+}
+
+.s1 {
+  padding-top: 50rpx;
+  font-size: 35rpx;
+  opacity: 0.8;
+}
+
+.createitem2 {
+  display: flex;
+  height: 80rpx;
+  &>label {
+    width: 40%;
+    height: 80rpx;
+    line-height: 80rpx;
+    display: inline-block;
+    /*width: 249rpx;*/
+    word-spacing: 60rpx;
+  }
+  &>.createitem1put2 {
+    width: 60%;
+    height: 100%;
+    margin-left: 20rpx;
+    display: inline-block;
+    background: #dbf2c4;
+    border-radius: 5rpx;
+    vertical-align: middle;
+    padding-left: 20rpx;
+    color: #898989;
+    font-size: 30rpx;
+  }
+}
+
+.createitem3 {
+  display: flex;
+  height: 80rpx;
+  &>.label3 {
+    width: 40%;
+    height: 80rpx;
+    line-height: 80rpx;
+    display: inline-block;
+    word-spacing: 60rpx;
+  }
+  &>.picker {
+    width: 60%;
+    height: 100%;
+    margin-left: 20rpx;
+    display: inline-block;
+    background: #dbf2c4;
+    border-radius: 5rpx;
+    vertical-align: middle;
+    padding-left: 20rpx;
+    color: #898989;
+    font-size: 30rpx;
+    line-height: 80rpx;
+  }
+}
+
+.labelitem4 {
+  width: 38%;
+  height: 80rpx;
+  line-height: 80rpx;
+  display: inline-block;
+  word-spacing: 60rpx;
+  text-align: justify;
+  text-align-last: justify;
+}
+
+.labelitems5 {
+  display: inline-block;
+  margin-left: 20rpx;
+}
+
+.createitem2>label,
+.createitem3>label {
+  text-align: justify;
+  text-align-last: justify;
+}
+
+.back_btn {
+  width: 180rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 40rpx;
+  right: 10rpx;
+  &>image {
+    width: 100%;
+  }
+}
+</style>

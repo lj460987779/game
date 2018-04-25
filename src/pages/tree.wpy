@@ -1,0 +1,61 @@
+<style lang="less">
+
+</style>
+<template>
+  <web-view src="{{src}}">
+  </web-view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import { tree_joinTreeUpdate, auth_encryptedUserData, auth_findUserInfo } from '../api/index'
+
+export default class tree extends wepy.page {
+  config = {
+    // navigationBarTitleText: 'tree'
+  }
+  data = {
+    treeId: null,
+    token: null,
+    src: null,
+    userInfo: null,
+    flag: null,
+    isShare: null
+  }
+  methods = {
+  }
+  components = {
+  }
+  async init() {
+    this.token = this.userInfo.token
+    this.src = `https://www.sysshu.com/static/vote/family-wx-xcx/index.html?id=${this.treeId}&token=${this.token}&flag=${this.flag}`
+    this.$apply()
+    if (this.isShare === "1") {
+      try {
+        await tree_joinTreeUpdate({
+          treeId: this.treeId
+        }, this.token)
+      } catch (e) {
+
+      }
+    }
+  }
+  async onLoad(options) {
+    this.isShare = options.isShare
+    this.flag = options.flag
+    this.treeId = options.treeId
+    // const userInfo = wepy.getStorageSync('userInfo')
+    try {
+      this.userInfo = await this.$parent.getUserInfo()
+    } catch (e) {
+      wepy.showToast({
+        title: `出错啦`,
+        icon: 'loading',
+        duration: 3000
+      })
+      return
+    }
+    this.init()
+  }
+}
+</script>

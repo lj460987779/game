@@ -1,0 +1,80 @@
+
+<template>
+  <view class="PkCover">
+    <view class="PkBanner">
+      <image src='/static/images/choosejiazupk.png' mode="widthFix" class="PkBannerImage"></image>
+    </view>
+    <view class="container container-pk">
+
+      <TreeList :treeList.sync="treeList" :toPath="toPath" :needRedirect="needRedirect"></TreeList>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import TreeList from '../components/treeList'
+import { tree_shareTree, tag_findMemoirList } from '../api/index'
+
+export default class pk extends wepy.page {
+  components = {
+    TreeList
+  }
+  config = {
+    navigationBarTitleText: 'pk'
+  }
+  data = {
+    userInfo: {},
+    toPath: 'pk_qa',
+    needRedirect: true,
+    treeId: null,
+    flag: null
+  }
+  methods = {
+    enterTreeClick(e) {
+      const treeId = e.currentTarget.dataset.treeid
+      wepy.navigateTo({
+        url: `/pages/pk_qa`
+      })
+    },
+    toTag() {
+      wepy.redirectTo({
+        url: "/pages/tree_one?treeId=" + this.treeId
+      })
+    },
+    toPk() {
+      wepy.redirectTo({
+        url: "/pages/pk_qa?treeId=" + this.treeId + "&flag=" + this.flag,
+      })
+    }
+  }
+  onShareAppMessage(res) {
+    return {
+      title: '我种下了一棵家族树，快来看看你在哪里吧！',
+      path: "/pages/pk?treeId=" + this.treeId,
+      success: function(res) {
+        // 转发成功
+      },
+      fail: function(res) {
+        // 转发失败
+      }
+    }
+
+  }
+  async onLoad(options) {
+    this.treeId = options.treeId
+    this.flag = "N"
+    try {
+      this.userInfo = await this.$parent.getUserInfo()
+      await tree_shareTree({ treeId: this.treeId }, this.userInfo.token)
+      const treeInfo = await tag_findMemoirList(this.treeId, this.userInfo.token)
+      consoel.log(treeInfo)
+    } catch (e) {
+
+    }
+  }
+}
+</script>
+<style lang="less">
+@import '../css/pk.less';
+</style>

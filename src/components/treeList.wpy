@@ -1,0 +1,101 @@
+<style lang="less">
+.list {
+  display: flex;
+  width: 100%;
+  height: 900rpx;
+  font-size: 60rpx;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .list-item {
+    width: 670rpx;
+    height: 160rpx; // border: 1px solid #000;
+    border-radius: 50px;
+    margin-bottom: 50rpx;
+    display: flex;
+    padding: 0 55rpx;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    box-sizing: border-box;
+    background-color: greenyellow;
+    >text {
+      color: #fff;
+    }
+  }
+  .bg {
+    background-image: url(" https://ohc5vthqm.qnssl.com/wx-image/2018-1-10/wcyds2.png ");
+    background-repeat: no-repeat;
+    background-size: 160rpx 160rpx;
+    background-position: 100% 100%;
+  }
+  .treeIcon {
+    width: 63rpx;
+    height: 135rpx;
+    position: absolute;
+    top: -15rpx;
+    right: 80rpx;
+    z-index: 999;
+  }
+}
+</style>
+<template>
+  <scroll-view scroll-y class="list">
+    <block wx:for-items="{{treeList}}" wx:for-index="index" wx:for-item="item" wx:key="id">
+      <view @tap="tap({{item.treeId}},{{item.personId}})" class="list-item {{item.type==1?'bg':''}}" style="background-color:{{item.bgcolor}};">
+        <text>{{item.treeName}}</text>
+        <image src="../static/images/wds1.png" wx:if="{{item.type==0}}" class="treeIcon"> </image>
+      </view>
+    </block>
+  </scroll-view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class treeList extends wepy.component {
+  data = {
+    list: [
+
+    ]
+  }
+  props = {
+    toPath: {
+      type: String,
+      default: 'null'
+    },
+    needRedirect: {
+      type: Boolean,
+      default: false
+    },
+    treeList: {
+      type: Array,
+      default: 'null',
+      twoWay: true
+    }
+  }
+  events = {
+
+  }
+
+  methods = {
+    tap(treeId, personId) {
+      const toPath = this.toPath
+      const needRedirect = this.needRedirect
+      console.log(needRedirect)
+      if (needRedirect) {
+        wepy.redirectTo({
+          url: './' + toPath + "?pid=" + personId + "&treeId=" + treeId
+        })
+      } else {
+        wepy.navigateTo({
+          url: './' + toPath + "?pid=" + personId + "&treeId=" + treeId
+        })
+      }
+
+    }
+  }
+
+  onLoad() {
+  }
+}
+</script>

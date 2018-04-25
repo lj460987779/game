@@ -1,0 +1,393 @@
+<template>
+  <view class="pkResultBox" style="height:{{wHeight}}px">
+    <view class="PkresultBanner">
+      <image src='/static/images/pk_grade.png' mode="widthFix" class="pkBannerImage"></image>
+      <view class="data_btn" style="">
+        <!-- <button @tap="entry('tree')">家族树</button> -->
+        <!-- <button @tap="entry('tag')">家人印象</button> -->
+        <!-- <button @tap="entry('data')">家族数据</button> -->
+      </view>
+    </view>
+    <view class="Pkcontainer">
+      <view class="Lim">
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+        <li class="Lim_li">
+          <span class="g">
+            <span></span>
+          </span>
+
+        </li>
+
+      </view>
+      <view class="describle">
+        <view wx:if="{{t===1}}" class="ss">
+          <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/pkResultThree.png' mode="widthFix"></image>
+        </view>
+        <view wx:elif="{{t===2}}" class="ss">
+          <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/pkResultOne.png' mode="widthFix"></image>
+        </view>
+        <view wx:else class="ss">
+          <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/pkResultTwo.png' mode="widthFix"></image>
+        </view>
+        <view class="describle1">
+          一共
+          <text>{{count}}</text>题， 答对
+          <text>{{trueCount}}</text>题
+          <!-- <view>您获得{{titleTips}}称号</view> -->
+        </view>
+        <view class="describle2">{{tips}}</view>
+      </view>
+
+      <view class="bottom">
+        <view class="bottom_trymore">
+          <view @tap="changeAgain" class="tryMoreChallenge">再玩儿一次</view>
+          <!-- <view @tap="back" class="goBackhome">返回</view> -->
+        </view>
+        <!-- <view class="bottom_share">
+                                      <view @tap="backToTree" class="f1">进入家族树</view>
+                                      <view style="width: 5rpx;height: 80rpx;background: #915e47;line-height: 100rpx;margin-left: 20rpx;margin-right: 20rpx;"></view>
+                                      <view @tap="toTag" class="f2">添加亲人印象</view>
+                                    </view> -->
+
+      </view>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' @tap="back" mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import {
+  tree_shareTree
+} from '../api/index'
+export default class pkGrade extends wepy.page {
+  config = {
+    navigationBarTitleText: '亲人猜一猜'
+  }
+  data = {
+    userInfo: {},
+    treeId: null,
+    count: null,     //该次pk答题的总个数
+    trueCount: null,  //该次pk答题的正确个数
+    wHeight: 0,
+    tips: '',
+    titleTips: '',
+    t: null,
+    flag: null,
+    treeName: null
+  }
+  onShareAppMessage(res) {
+    return {
+      title: '我种下了一棵家族树，快来看看你在哪里吧！',
+      path: "/pages/pk?treeId=" + this.treeId,
+      success: function(res) {
+        // 转发成功
+      },
+      fail: function(res) {
+        // 转发失败
+      }
+    }
+  }
+  methods = {
+    back() {
+      wepy.navigateBack({
+        delta: 1
+      })
+    },
+    backToTree() {
+      wepy.redirectTo({
+        url: './tree?treeId=' + this.treeId + "&flag=N"
+      })
+    },
+    entry(path) {
+      if (path == "tree") {
+        wepy.redirectTo({
+          url: `/pages/tree?treeId=${this.treeId}&isShare=1&flag=N`,
+        })
+      } else if (path == "tag") {
+        wepy.redirectTo({
+          url: `/pages/tree_one?treeId=${this.treeId}&treeName=${this.treeName}`,
+        })
+      } else {
+        //tag
+        wepy.redirectTo({
+          url: `/pages/data_detail?treeId=${this.treeId}`,
+        })
+      }
+
+    }
+  }
+  components = {}
+  onLoad(options) {
+    const userInfo = wepy.getStorageSync('userInfo')
+    this.treeName = options.treeName
+    this.token = userInfo.token
+    this.treeId = options.treeId
+    this.count = options.count
+    this.flag = options.flag
+    this.trueCount = options.trueCount
+    const trueRate = parseFloat(options.trueCount / options.count)
+    if (trueRate < 0.34) {
+      this.t = 1
+      this.titleTips = "少小离家"
+      this.tips = "记性不行了，快去多了解下亲人吧"
+    } else if (trueRate > 0.34 && trueRate < 0.64) {
+      this.t = 3
+      this.titleTips = "相亲相爱"
+      this.tips = `你猜出了${this.trueCount}位亲人，还是要对他们多些了解哦。`
+    } else {
+      this.t = 2
+      this.titleTips = "血浓于水"
+      this.tips = "你太厉害了！快去给亲人添加新的标签吧。"
+    }
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+
+      }
+    })
+  }
+  changeAgain() {
+    wepy.redirectTo({
+      url: './pk_qa?treeId=' + this.treeId
+    })
+  }
+  toTag() {
+    wepy.redirectTo({
+      url: './tree_one?treeId=' + this.treeId
+    })
+  }
+  // onShareAppMessage(res) {
+  //   // await tree_shareTree({ treeId: this.treeId }, this.token)
+  //   return {
+  //     title: '自定义转发标题',
+  //     path: '/pages/tree?treeId=' + this.treeId + "&isShared=1",
+  //     success: function(res) {
+  //       // 转发成功
+  //     },
+  //     fail: function(res) {
+  //       // 转发失败
+  //     }
+  //   }
+
+
+  // }
+}
+</script>
+
+<style lang="less">
+/*@import '../css/pk_grade.less';*/
+
+.pkResultBox {
+  background: #dbf2c5;
+}
+
+.PkresultBanner {
+  width: 100%;
+  height: 320rpx;
+  position: relative;
+  .pkBannerImage {
+    width: 100%;
+    height: 240rpx;
+  }
+  .data_btn {
+    width: 85%;
+    height: 100rpx;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    position: absolute;
+    top: 120rpx;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+    &>button {
+      width: 180rpx;
+      height: 60rpx;
+      background: #59a1cf;
+      border: 2rpx solid #fff;
+      font-size: 28rpx;
+      color: #fff;
+      line-height: 60rpx;
+    }
+  }
+}
+
+.Pkcontainer {
+  width: 95%;
+  /*height: 70%;*/
+  background: #fff;
+  margin: 0 auto;
+  position: absolute;
+  top: 240rpx;
+  left: 0;
+  right: 0;
+  margin: auto;
+  border-radius: 10rpx;
+  .describle {
+    text-align: center;
+    margin-top: 50rpx;
+    padding-left: 30rpx;
+    padding-right: 30rpx;
+    .ss {
+      width: 100%;
+      height: 200rpx;
+      margin-top: 80rpx;
+      &>image {
+        width: 280rpx;
+      }
+    }
+    .describle1 {
+      width: 100%;
+      color: #ea8480;
+      margin-bottom: 20rpx;
+      text-shadow: 8px;
+      font-size: 45rpx;
+      margin-top: 20rpx;
+    }
+    .describle2 {
+      color: #313131;
+      line-height: 50rpx;
+      font-size: 38rpx;
+    }
+  }
+  .bottom {
+    margin-top: 60rpx;
+    width: 100%;
+    text-align: center;
+    padding-bottom: 40rpx;
+    .bottom_trymore {
+      width: 100%;
+      height: 100rpx;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 20rpx;
+      .tryMoreChallenge {
+        width: 280rpx;
+        height: 80rpx;
+        line-height: 80rpx;
+        background: #f7c02f;
+        color: #915e47;
+        text-align: center;
+        margin: 0 auto;
+        border-radius: 80rpx;
+      }
+      .goBackhome {
+        width: 280rpx;
+        height: 80rpx;
+        line-height: 80rpx;
+        background: #ea8480;
+        color: #fff;
+        text-align: center;
+        margin: 0 auto;
+        border-radius: 80rpx;
+      }
+    }
+
+    .bottom_share {
+      width: 80%;
+      height: 100rpx;
+      margin: 0 auto;
+      line-height: 100rpx;
+      padding-top: 40rpx;
+      /*position: absolute;
+      bottom: 50rpx;
+      left: 0;
+      right: 0;*/
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      .f1 {
+        border: none;
+      }
+      .f1::after {
+        display: none;
+      }
+      .f1,
+      .f2 {
+        /*display: inline-block;*/
+        width: 45%;
+        font-size: 32rpx;
+        color: #915e47;
+      }
+    }
+  }
+}
+
+.Lim {
+  height: 00rpx;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fff;
+  .Lim_li {
+    transform: rotate(180deg);
+    .g {
+      width: 20rpx;
+      height: 20rpx;
+      border-radius: 20rpx;
+      border: 2px solid #915e47;
+      display: inline-block;
+      /*transform: translateY(30rpx);*/
+      &>span {
+        width: 20rpx;
+        height: 60rpx;
+        background: #f7c02f;
+        border-radius: 40rpx;
+        display: inline-block;
+      }
+    }
+  }
+}
+
+.back_btn {
+  width: 180rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 40rpx;
+  right: 10rpx;
+  &>image {
+    width: 100%;
+  }
+}
+</style>

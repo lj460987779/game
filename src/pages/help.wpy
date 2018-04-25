@@ -1,0 +1,84 @@
+<style lang="less">
+page{
+    background: #f2f2f2;
+}
+.helpBox{
+    width: 96%;
+    height: auto;
+    margin: 0 auto;
+    padding-bottom: 20rpx;
+    .p1{
+        width: 100%;
+        margin-top: 60rpx;
+        .p1title{
+            font-size: 42rpx;
+            margin-bottom: 10rpx;
+            font-weight: bold;
+            color: #313131;
+        }
+        .p1_des{
+            font-size: 36rpx;
+            color: #313131;
+            line-height: 48rpx;
+        }
+        &>image{
+            width: 100%;
+            margin-top: 20rpx;
+        }
+    }
+}
+</style>
+<template>
+    <view class="helpBox" style="">
+        <view class="p1">
+            <view class="p1title">1.制作家谱</view>
+            <view class="p1_des">点击制作家谱按钮，输入相关信息，种下自己的家族树。</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help1.png' mode="widthFix" class="help"></image>
+        </view>
+        <view class="p1">
+            <view class="p1title">2.查看种下的家族树。</view>
+            <view class="p1_des">点击你的家族树，查看家谱信息</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help2.png' mode="widthFix" class="help"></image>
+        </view>        
+        <view class="p1">
+            <view class="p1title">3.补充亲人信息，分享协作</view>
+            <view class="p1_des">点击亲人头像，填写信息；给亲人添加有趣的标签。也可以分享给亲人，大家一起来协作。</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help3.png' mode="widthFix" class="help"></image>
+        </view>        
+        <view class="p1">
+            <view class="p1title">4.亲人猜一猜，邀请问答</view>
+            <view class="p1_des">您可以在这里猜猜Ta是您的哪位亲人。</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help4.png' mode="widthFix" class="help"></image>
+        </view>        
+        <view class="p1">
+            <view class="p1title">5.家族数据</view>
+            <view class="p1_des">点击家族数据按钮，您可以查看家族树中所有亲人的相关数据。</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help5.png' mode="widthFix" class="help"></image>
+        </view>        
+        <view class="p1">
+            <view class="p1title">6.家人印象</view>
+            <view class="p1_des">点击家人印象按钮，查看亲人们对你的印象，同时您也可以添加对他们的印象。</view>
+            <image src='https://ohc5vthqm.qnssl.com/wx-image/2018-2-2/help6.png' mode="widthFix" class="help"></image>
+        </view>        
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+
+
+export default class help extends wepy.page {
+    config = {
+        navigationBarTitleText: '帮助'
+    }
+    data = {
+
+    }
+    methods = {
+    }
+    components = {
+    }
+    onLoad(options) {
+    }
+}
+</script>

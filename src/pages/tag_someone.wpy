@@ -1,0 +1,364 @@
+<template>
+  <view class="someoneTag">
+    <view class="headerImg">
+      <image src="../static/images/jiazutag.png"></image>
+    </view>
+    <view class="tagbox">
+      <view class="tagbox-header bounceInDown animated">
+        <view class="tagbox-header-avatar">
+          <image src="{{avatar||defaultAvatar}}" mode='aspectFill'></image>
+        </view>
+        <view>
+          <view class="tagbox-header-name">{{appellation}}的印象标签</view>
+          <view class="tagbox-header-tip">点赞或添加新的标签</view>
+        </view> 
+      </view>
+      <!-- <scroll-view scroll-y='true' style="height: 72%;"> -->
+      <view class="tagbox-list">
+        <block wx:for="{{tags}}" wx:key="id">
+          <view data-tagid="{{item.id}}" data-special="{{item.special}}" @tap="likeClick" style="border: 2rpx solid {{item.tagsColor}}; color: {{item.tagsColor}};" class="{{addFlag == true?'addLeft':''}} tags fadeInLeft animated">
+            {{item.tag}}
+            <image class="likeImg" src="../static/images/like.png" mode="aspectFill"></image>
+            <view class="likeNum">{{item.likeNum}}</view>
+          </view>
+        </block>
+        <!-- 默认标签 -->
+        <block wx:for="{{defaultTag}}" wx:key="id">
+          <view data-special="{{item.special}}" data-defaultv="{{item.tag}}" data-pid="{{item.personId}}" data-did="{{item.id}}" @tap="likeDefaultTag" style="border: 2rpx solid {{item.color}}; color: {{item.color}};" class="{{addFlag==true?'rightNone':''}} tags defaults fadeInRight animated">
+            {{item.tag}}
+            <image wx:if="{{item.personId !== 'ALL'}}" class="likeImg" src="../static/images/like.png" mode="aspectFill"></image>
+            <view wx:if="{{item.likeNum}}" class="likeNum">{{item.likeNum}}</view>
+          </view>
+        </block>
+      </view>
+      <!-- 自定义 -->
+      <view class="customTag bounceInUp animated" @tap="showPopWindow">
+        <image src="../static/images/customTag.png"></image>
+        <text>自定义印象</text>
+      </view>
+      <!-- </scroll-view> -->
+    </view>
+    <!-- 弹窗 -->
+    <view wx:if="{{flag}}" class="{{flag == true ? 'fadeIn' : ''}} customPop">
+      <view class="customPop-box">
+        <view class="customPop-box-title">
+          自定义印象
+          <!-- close -->
+          <view class="closePop" @tap="showPopWindow">
+            <image src="../static/images/closeImg.png"></image>
+          </view>
+        </view>
+        <view class="customPop-box-Int">
+          <input type="text" value='' @input="bindTagInput" focus="{{focus}}" cursor-spacing='150' maxlength='8' placeholder="输入对Ta的印象标签" />
+          <view class="customPop-box-Int-mtip">自定义印象最多8个字。</view>
+        </view>
+        <!-- 确定 -->
+        <view class="confirm" @tap="customAdd">完成</view>
+      </view>
+      <!-- 蒙层 -->
+      <view class="customPop-mask"></view>
+    </view>
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' mode="widthFix" @tap="back" class="familyTreeCoverBannerImage"></image>
+    </view>
+    <!-- 提示蒙层 -->
+    <view wx:if="{{treeWarning}}" class="{{treeWarning === true?'fadeIn':''}} Warning">
+      <view class="treeWarning">
+        <text>{{warnText}}</text>
+      </view>
+    </view>
+    <!-- 个人信息 -->
+    <personInfo wx:if="{{showInfo}}" :activePerson.sync="activePerson" @fireAppellation.user="onAppellation" @appellationNull.user="appellnotNull"></personInfo>
+    <!-- 信息蒙层 -->
+    <!-- <view  wx:if="{{showInfo}}" @tap="showOneInfo" class="customPop-mask"></view> -->
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import PersonInfo from '../components/personInfo'
+import {
+  tag_getPersonTags,
+  tag_addPersonTag,
+  tag_likeTag
+} from '../api/index'
+import broadCast from '../utils/broadcast'
+export default class tagSomeone extends wepy.page {
+  config = {
+    navigationBarTitleText: '家人印象'
+  }
+  data = {
+    flag: false,
+    activePerson:null,
+    focus: false,
+    addFlag: false,
+    showInfo: false,
+    treeWarning: false,
+    personId: '',
+    userToken: '',
+    seniority: '',
+    avatar: '',
+    appellation: '',
+    inputTag: '',
+    newId: '',
+    warnText: '',
+    tags: [],
+    defaultTag: [],
+    likedTags: [],
+    colors: ['#ea8480', '#f7c02f', '#76b445', '#4d9fe3'],
+    defaultAvatar: '../static/images/jiazupk2.png'
+  }
+  methods = {
+    // 自定义事件
+    async customAdd() {
+      const that = this
+      let { inputTag, personId, userToken, tags, colors } = this.data
+      const special = 0;
+      if (inputTag.length > 0) {
+        this.flag = false;
+        this.inputTag = '';
+        await that.addPersonTag(personId, inputTag, special, userToken)
+        wepy.hideLoading()
+        let newtag = {
+          'likeNum': 1,
+          'tag': inputTag,
+          'id': this.newId,
+          'special': 0,
+          'personId': personId,
+          'tagsColor': colors[Math.floor(Math.random() * colors.length)]
+        }
+        this.tags.push(newtag);
+        this.addFlag = true;
+        this.likedTags.push(this.newId);
+        wepy.setStorageSync('likeHistory', this.likedTags);
+        this.$apply();
+      }
+    },
+    // 监听输入框是否输入文本
+    bindTagInput(e) {
+      let inTag = e.detail.value;
+      this.inputTag = inTag;
+      this.$apply();
+    },
+    // 标签点赞
+    async likeClick(e) {
+      const that = this;
+      let { tags, userToken, likedTags } = this.data
+      let tagId = e.currentTarget.dataset.tagid
+      let special = e.currentTarget.dataset.special
+      let history = likedTags.find(v => v === tagId)
+      if ( history ) {
+        this.treeWarning = true
+        this.warnText = `对Ta的印象，点一次就够了哟！`
+        this.$apply()
+        setTimeout(() => {
+          this.treeWarning = false
+          this.$apply()
+        }, 1000);
+      } else {
+        const datas = tags.map(v => {
+          if (tagId === v.id) {
+            v.likeNum++
+          }
+          return v
+        })
+        this.tags = datas
+        likedTags.push(tagId)
+        this.likedTags = likedTags
+        wepy.setStorageSync('likeHistory', likedTags);
+        this.$apply()
+        await that.likeTag(tagId, userToken, special)
+      }
+    },
+    // 选择默认标签
+    async likeDefaultTag(e) {
+      const that = this;
+      let { personId, userToken, defaultTag, colors } = this.data
+      let tagValue = e.currentTarget.dataset.defaultv
+      let dId = e.currentTarget.dataset.did
+      let pid = e.currentTarget.dataset.pid
+      let special = e.currentTarget.dataset.special
+      if (pid === 'ALL') {
+        await that.addPersonTag(personId, tagValue, special, userToken)
+        wepy.hideLoading()
+        let newtags = defaultTag.map(v=>{
+          if (dId === v.id) {
+            v.id = this.newId
+            v.personId = personId
+            v.likeNum = 1
+            v.special = 0 
+            v.color = colors[Math.floor(Math.random() * colors.length)]
+          }
+          return v
+        })
+        this.defaultTag = newtags
+        this.$apply();
+      } else {
+        this.treeWarning = true
+        this.warnText = `对Ta的印象，点一次就够了哟！`
+        this.$apply()
+        setTimeout(() => {
+          this.treeWarning = false
+          this.$apply()
+        }, 1000);
+      }
+      this.addFlag = true;
+      this.likedTags.push(this.newId);
+      wepy.setStorageSync('likeHistory', this.likedTags);
+      this.$apply();
+    },
+    // 弹窗
+    showPopWindow() {
+      let flag = this.flag;
+      this.focus = true; // 输入框自动聚焦
+      this.$apply();
+      if (!flag) {
+        this.flag = true;
+        this.$apply();
+      } else {
+        this.flag = false;
+        this.inputTag = '';
+        this.$apply();
+      }
+    },
+    // 监听称呼
+    onAppellation(appelInput) {
+      wepy.setNavigationBarTitle({
+        title: `关于-${appelInput}-的印象`
+      })
+      this.treeWarning = true
+      this.warnText = `更新信息成功！`
+      setTimeout(() => {
+        this.treeWarning = false
+        this.$apply()
+      }, 1500);
+      this.appellation = appelInput
+      this.$apply();
+    },
+    // 监听称呼是否为空
+    appellnotNull() {
+      this.treeWarning = true
+      this.warnText = `请输入家人称呼！`
+      this.$apply();
+      setTimeout(() => {
+        this.treeWarning = false
+        this.$apply()
+      }, 1500);
+    },
+    // 返回
+    back() {
+      wepy.navigateBack({
+        delta: 1
+      })
+    }
+  }
+  components = {
+    personInfo: PersonInfo
+  }
+  // 添加标签
+  async addPersonTag(pid, taginput, special, atoken) {
+    if (!atoken) return
+    try {
+      let res =  await tag_addPersonTag(pid, taginput, special, atoken)
+      this.newId = res.data.data.id
+      this.$apply();
+      broadCast.fire("add_tag_success")
+    } catch (err) {
+      this.treeWarning = true
+      this.warnText = `添加标签失败,请重试！`
+      this.$apply()
+      setTimeout(() => {
+        this.treeWarning = false
+        this.$apply()
+      }, 1000);
+    }
+  }
+  // 标签列表
+  async getTag(id, token, seniority) {
+    if (!token) return
+    let { colors } = this.data,
+      colorlen = colors.length;
+    try {
+      let res = await tag_getPersonTags(id, token, seniority)
+      let resdata = res.data.data
+      const datas = resdata.map(item => {
+        item.tagsColor = colors[Math.floor(Math.random() * colorlen)]
+        return item
+      })
+
+      let personstag = datas.filter(v => v.personId !== 'ALL')
+      let libs = datas.filter(v => v.personId === 'ALL')
+      libs = libs.filter(v => !(personstag.find(vv => vv.tag === v.tag)))
+      personstag.concat(libs)
+      this.tags = personstag
+      this.defaultTag = libs
+      // this.defaultTag = libs.sort((a,b)=>{
+      //   return Math.random() > 0.5 ? 1 : -1
+      // }).slice(0,12)
+      this.$apply();
+      wepy.setStorageSync('tags', datas);
+    } catch (err) {
+
+    }
+  }
+  // 点赞
+  likeTag(tagId, token, special) {
+    if (!token) return
+    try {
+      tag_likeTag(tagId, token, special)
+    } catch (err) {
+      this.treeWarning = true
+      this.warnText = `点赞失败,请重试！`
+      this.$apply()
+      setTimeout(() => {
+        this.treeWarning = false
+        this.$apply()
+      }, 1000);
+    }
+  }
+  async onRefreshTags() {
+    let { personId, userToken, seniority } = this.data
+    await this.getTag(personId, userToken, seniority)
+    wepy.hideLoading()
+  }
+  async onLoad(options) {
+    let personid = options.pId
+    let seniority = options.seniority
+    this.appellation = options.callName
+    this.avatar = wepy.getStorageSync('avatarImg')
+    this.activePerson = wepy.getStorageSync('activePerson')
+    this.$apply();
+    wepy.setNavigationBarTitle({
+      title: `关于-${this.appellation}-的印象`
+    })
+    try {
+      const userinfo = await this.$parent.getUserInfo()
+      await this.getTag(personid, userinfo.token, seniority)
+      wepy.hideLoading()
+      this.showInfo = true
+      this.personId = personid
+      this.seniority = seniority
+      this.userToken = userinfo.token
+      let likedTags = wepy.getStorageSync('likeHistory') || [];
+      this.likedTags = likedTags
+      wepy.setStorageSync('likeHistory', likedTags);
+      this.$apply();
+    } catch (e) {
+      wepy.showModal({
+        title: '提示',
+        content: "网络错误！",
+        success: function(res) {
+        }
+      })
+    }
+    
+    broadCast.on("updatePerson_success", () => {
+      this.onRefreshTags() 
+    })
+  }
+}
+</script>
+
+<style lang="less">
+@import '../css/tag_someone.less';
+</style>

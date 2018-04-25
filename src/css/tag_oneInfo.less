@@ -1,0 +1,124 @@
+.persondetail {
+  width: 100%;
+  padding-top: 3rpx;
+  margin-top: 25rpx;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  .detail-form {
+    width: 100%;
+    padding: 50rpx 0 25rpx;
+    background-color: #fff;
+    border-radius: 10rpx;
+    box-shadow: 0px 0px 12px #9e9b9b;
+    overflow: hidden;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    .nickItem {
+      height: 100rpx;
+    }
+    .tip{ 
+      margin-left: 20rpx;
+      font-size: 35rpx;
+    }
+    .formlist {
+      position: relative;
+      display: flex;
+      align-items: center;
+      font-size: 34rpx;
+      padding: 0 36rpx;
+      .nickInput {
+        display: inline-block;
+        color: #898989;
+        width: 400rpx;
+        height: 70rpx;
+        line-height: 70rpx;
+        padding: 0rpx 26rpx;
+        text-align: left;
+        font-size: 32rpx;
+        background-color: #dbf2c4;
+        border-radius: 10rpx;
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+      }
+      .listleft {
+        width: 236rpx;
+        text-align: right;
+      }
+      .allpick {
+        display: flex;
+        align-items: center;
+        height: 100rpx; // line-height: 100rpx;
+        view {
+          display: inline-block;
+          color: #898989;
+          width: 400rpx;
+          height: 70rpx;
+          line-height: 70rpx;
+          padding: 0rpx 30rpx;
+          font-size: 32rpx;
+          text-align: left;
+          background-color: #dbf2c4;
+          border-radius: 10rpx;
+          box-sizing: border-box;
+          -webkit-box-sizing: border-box;
+        }
+      }
+      .star:before {
+        margin-right: 10rpx;
+        content: "＊";
+        font-size: 24rpx;
+        font-family: SimSun;
+        color: #f50;
+      }
+      .null:before {
+        margin-right: 10rpx;
+        content: "＊";
+        font-size: 24rpx;
+        font-family: SimSun;
+        color: #fff;
+      }
+      .radio-group {
+        display: flex;
+        align-items: center;
+        .radio {
+          display: flex;
+          align-items: center;
+          margin-right: 60rpx;
+          font-size: 32rpx;
+          > radio {
+            transform: scale(.8);
+          }
+        }
+        .radio:last-child{
+          margin-right: 0rpx;
+        }
+      }
+      // 三角形
+      .triangle {
+        position: absolute;
+        top: 18rpx;
+        right: 68rpx;
+        bottom: 0;
+        margin: auto;
+        width: 0; 
+        height: 0;
+        border-width: 12rpx;
+        border-style: solid;
+        border-color: #5a5a5a transparent transparent transparent;
+      }
+    }
+  } 
+  .saveMessage{
+    margin-top: 25rpx;
+    > button {
+      color: #915e49;
+      width: 36%;
+      height: 70rpx;
+      line-height: 70rpx;
+      border-radius: 50rpx;
+      background-color: #f7c02f;
+      border: none!important;
+      outline: none!important;
+    }
+  }
+}

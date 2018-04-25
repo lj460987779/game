@@ -1,0 +1,65 @@
+<style lang="less">
+page {
+  width: 100%;
+  height: 100%;
+  background: #dbf2c5;
+  position: relative;
+  padding-bottom: 2000px;
+  margin-bottom: -2000px;
+  overflow: hidden;
+}
+
+.DataCover {
+  .familyDataBanner {
+    width: 100%;
+    height: 320rpx;
+    .familyDataCoverBannerImage {
+      width: 100%;
+      height: 240rpx;
+    }
+  }
+}
+</style>
+<template>
+  <!--  <view>
+      <TreeList :treeList="treeLists" :toPath="toPath"></TreeList>
+    </view> -->
+  <view class="DataCover" style="height:{{wHeight}}px">
+    <view class="familyDataBanner">
+      <image src='/static/images/jiazudata.png' mode="widthFix" class="familyDataCoverBannerImage"></image>
+    </view>
+    <view>
+      <TreeList :treeList.sync="treeList" :toPath="toPath"></TreeList>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import TreeList from '../components/treeList'
+
+import { auth_encryptedUserData, auth_findUserInfo, tree_getTreeList } from '../api/index'
+
+export default class _data extends wepy.page {
+  config = {
+    navigationBarTitleText: '_data'
+  }
+  data = {
+    toPath: 'data_detail',
+    treeList: [
+
+    ]
+  }
+  methods = {
+  }
+  components = {
+    TreeList
+  }
+  onLoad(options) {
+
+    wepy.getStorageSync('userInfo')
+    this.treeList = wepy.getStorageSync("treeList")
+    this.$apply()
+  }
+}
+</script>

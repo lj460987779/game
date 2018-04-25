@@ -1,0 +1,264 @@
+<style lang="less">
+page {
+  overflow-x: inherit;
+  overflow: hidden;
+}
+
+.treeSharebox {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-2-7/paper-bg.jpg) no-repeat;
+  background-size: cover;
+  .TreeShareBanner {
+    width: 100%;
+    height: 320rpx;
+    /*background: red;*/
+    position: absolute;
+    top: 0rpx;
+    &>image {
+      width: 100%;
+      height: 240rpx;
+    }
+  }
+
+
+  &-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .dd {
+    width: 80%;
+    height: 100rpx;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 0 auto;
+    position: absolute;
+    bottom: 170rpx;
+    left: 0;
+    right: 0;
+    z-index: 999;
+
+    .p1 {
+      width: 260rpx;
+      height: 100rpx;
+      border-radius: 50rpx;
+      background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-2-6/share.png) no-repeat;
+      background-size: cover;
+      background-position: center;
+      .treeSharebox-shareBtn {
+        width: 260rpx;
+        height: 100rpx;
+        border-radius: 50rpx;
+        background: transparent;
+        border: none;
+      }
+      .treeSharebox-shareBtn::after {
+        border: none;
+      }
+    }
+    .p2 {
+      width: 260rpx;
+      height: 100rpx;
+      border-radius: 50rpx;
+      background: url(https://ohc5vthqm.qnssl.com/wx-image/2018-2-7/save.png) no-repeat;
+      background-size: cover;
+      background-position: center;
+      .treeSharebox-shareBtn {
+        width: 260rpx;
+        height: 100rpx;
+        border-radius: 50rpx;
+        background: transparent;
+        border: none;
+      }
+      .treeSharebox-shareBtn::after {
+        border: none;
+      }
+    }
+  }
+  .pingji {
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    bottom: 100rpx;
+    z-index: 99999;
+    color: #7d4639;
+    font-size: 32rpx;
+    &>text{
+      color: #c64900;
+    }
+  }
+  .back_btn {
+    width: 180rpx;
+    height: 80rpx;
+    position: fixed;
+    bottom: 40rpx;
+    right: 10rpx;
+    z-index: 9999;
+    &>image {
+      width: 100%;
+    }
+  }
+  .share_bottom {
+    width: 100%;
+    position: absolute;
+    bottom: 0rpx;
+  }
+}
+</style>
+<template>
+  <view class="treeSharebox" style="height:{{wHeight}}px;">
+
+    <image src="{{img}}" class="treeSharebox-image" mode="widthFix" lazy-load="true"></image>
+    <!-- <image src="/static/images/123.jpg" class="treeSharebox-image" mode="widthFix" lazy-load="true"></image> -->
+    <view class="dd">
+      <view class="p1">
+        <button open-type="share" class="treeSharebox-shareBtn"></button>
+      </view>
+      <view class="p2">
+        <button @tap="saveImgToPhotosAlbumTap" class="treeSharebox-shareBtn"></button>
+      </view>
+    </view>
+    <!-- 家族等级 -->
+    <!-- <view >
+        当前评级{{treeInfo.title}} 距下一等级{{treeInfo.next}}还差{{treeInfo.nextNeedPerson}}个人
+      </view> -->
+    <view class="pingji" wx:if="{{treeInfo.next}}">
+      还差{{treeInfo.nextNeedPerson}}人达到“<text>{{treeInfo.next}}</text>”评级
+    </view>
+    <!--  -->
+    <view class="back_btn">
+      <image src='/static/images/back_btn.png' @load="loaded" @tap="back" mode="widthFix" class="familyTreeCoverBannerImage"></image>
+    </view>
+    <image class="share_bottom" src='/static/images/cloudyun.png' mode="widthFix"></image>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import { tree_shareTree } from '../api/index'
+import {
+  createTreeTitle
+} from '../utils/index'
+
+export default class tree_share extends wepy.page {
+  config = {
+    navigationBarTitleText: '家族树'
+  }
+  data = {
+    img: null,
+    token: null,
+    treeId: null,
+    wHeight: 0,
+    treeInfo: null
+  }
+  methods = {
+    back() {
+      wepy.navigateBack({
+        delta: 1
+      })
+    },
+    loaded(e) {
+      // wepy.hideLoading()
+    },
+    saveImgToPhotosAlbumTap() {
+      wepy.showLoading({
+        title: '下载中',
+        mask: false
+      })
+      wepy.downloadFile({
+        url: this.img,
+        success: function(res) {
+          wepy.saveImageToPhotosAlbum({
+            filePath: res.tempFilePath,
+            success: function(res) {
+              wepy.hideLoading()
+              wepy.showToast({
+                title: '图片保存成功',
+                icon: 'success',
+                duration: 2000
+              })
+            },
+            fail: function(res) {
+              wepy.hideLoading()
+              wepy.showToast({
+                title: '图片保存失败',
+                icon: 'loading',
+                duration: 1500
+              })
+            }
+          })
+        },
+        fail: function() {
+          wepy.hideLoading()
+          wepy.showToast({
+            title: '图片保存失败',
+            icon: 'loading',
+            duration: 1500
+          })
+        }
+      })
+
+    },
+    onShareAppMessage(res) {
+      return {
+        title: '我种下了一棵家族树，快来看看你的家谱吧！',
+        path: `/pages/tree?treeId=${this.treeId}&isShare=1`,
+        success: function(res) {
+          // 转发成功
+        },
+        fail: function(res) {
+          // 转发失败
+        }
+      }
+
+    }
+  }
+  components = {
+  }
+  async onLoad(options) {
+    this.img = decodeURIComponent(options.img)
+    // options.personNum = 32    //模拟数据
+    if (options.personNum) {
+      this.treeInfo = createTreeTitle(parseInt(options.personNum))
+      if (this.treeInfo.next) {
+        this.treeInfo.nextNeedPerson = 20 - (parseInt(options.personNum) % 20)
+      }
+    }
+    this.treeId = options.treeId
+    wepy.showLoading({
+      title: '加载图片中...',
+      mask: false
+    })
+    var t = setTimeout(function() {
+      wepy.hideLoading()
+      clearTimeout(t)
+    }, 2000);
+    // const userInfo = await this.$parent.getUserInfo()
+    // const token = userInfo.token
+    // this.token = userInfo.token
+    // try {
+    //   await tree_shareTree({
+    //     treeId: this.treeId
+    //   }, this.token)
+    // } catch (e) {
+    //   wepy.showToast({
+    //     title: '网络错误,请重试',
+    //     // icon: 'success',
+    //     duration: 2000
+    //   })
+    // }
+
+    wepy.getSystemInfo({
+      success: (res) => {
+        this.wHeight = res.windowHeight
+        this.wWidth = res.windowWidth
+      }
+    })
+  }
+}
+</script>
